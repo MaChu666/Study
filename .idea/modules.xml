@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/bil-admin/bil-admin.iml" filepath="$PROJECT_DIR$/bil-admin/bil-admin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bil-common/bil-common.iml" filepath="$PROJECT_DIR$/bil-common/bil-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bil-web/bil-web.iml" filepath="$PROJECT_DIR$/bil-web/bil-web.iml" />
+    </modules>
+  </component>
+</project>
