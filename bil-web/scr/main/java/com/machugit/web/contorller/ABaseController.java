@@ -1,11 +1,14 @@
 package com.machugit.web.contorller;
+import com.machugit.component.RedisComponent;
 import com.machugit.entity.constants.Constants;
+import com.machugit.entity.dto.TokenUserInfoDto;
 import com.machugit.entity.enums.ResponseCodeEnum;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.exception.BusinessException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +19,9 @@ public class ABaseController {
     protected static final String STATUC_SUCCESS = "success";
 
     protected static final String STATUC_ERROR = "error";
+
+    @Resource
+    private RedisComponent redisComponent;
 
     protected <T> ResponseVO getSuccessResponseVO(T t) {
         ResponseVO<T> responseVO = new ResponseVO<>();
@@ -86,5 +92,29 @@ public class ABaseController {
         cookie.setPath("/");
         response.addCookie(cookie);
 
+    }
+
+    //获取token中的用户信息
+    protected TokenUserInfoDto getTokenUserInfoDto() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String token = request.getHeader(Constants.TOKEN_WEB);
+        return redisComponent.getTokenUserInfo(token);
+    }
+
+    //清除token设置cookie为初始
+    protected void removeTokenFromCookie(HttpServletResponse response) {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (Constants.TOKEN_WEB.equals(cookie.getName())) {
+                    redisComponent.cleanTokenInfo(cookie.getValue());
+                    cookie.setMaxAge(0);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
+                    break;
+                }
+            }
+        }
     }
 }

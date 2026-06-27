@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 
 import com.machugit.component.RedisComponent;
 import com.machugit.entity.constants.Constants;
@@ -236,7 +238,6 @@ public class UserInfoServiceImpl implements UserInfoService {
 		this.userInfoMapper.updateByUserId(updateInfo, userInfo.getUserId());
 		TokenUserInfoDto tokenUserInfoDto = CopyTools.copy(userInfo, TokenUserInfoDto.class);
 		redisComponent.saveTokenInfo(tokenUserInfoDto);
-
 		return tokenUserInfoDto;
 	}
 }

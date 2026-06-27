@@ -34,8 +34,18 @@ public class RedisComponent {
     //保存token
     public void saveTokenInfo(TokenUserInfoDto tokenUserInfoDto){
         String token = UUID.randomUUID().toString();
-        tokenUserInfoDto.setExpireAt(System.currentTimeMillis()+Constants.REDIS_KEY_EXPIRE_TIME_ONE_DAY *30);
+        tokenUserInfoDto.setExpireAt(System.currentTimeMillis()+Constants.REDIS_KEY_EXPIRE_TIME_ONE_DAY *7);
         tokenUserInfoDto.setToken(token);
-        redisUtils.setex(Constants.REDIS_KEY_TOKEN_WEB+token,tokenUserInfoDto,Constants.REDIS_KEY_EXPIRE_TIME_ONE_DAY *30);
+        redisUtils.setex(Constants.REDIS_KEY_TOKEN_WEB+token,tokenUserInfoDto,Constants.REDIS_KEY_EXPIRE_TIME_ONE_DAY *7);
     }
+
+    //清除token
+    public void cleanTokenInfo(String token){
+        redisUtils.delete(Constants.REDIS_KEY_TOKEN_WEB+token);
+    }
+
+    public TokenUserInfoDto getTokenUserInfo(String token){
+        return (TokenUserInfoDto) redisUtils.get(Constants.REDIS_KEY_TOKEN_WEB+token);
+    }
+
 }

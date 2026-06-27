@@ -7,6 +7,8 @@ import com.machugit.entity.query.UserInfoQuery;
 import com.machugit.entity.po.UserInfo;
 import com.machugit.entity.vo.PaginationResultVO;
 
+import javax.servlet.http.HttpServletRequest;
+
 
 /**
  * 用户信息表 业务接口
