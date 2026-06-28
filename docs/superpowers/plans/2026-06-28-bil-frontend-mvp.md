@@ -16,6 +16,8 @@
 - Use Pinia for user information, global player state, and theme state.
 - Use Mitt for login and video interaction events.
 - Use Axios for API requests, token injection, and unified error handling.
+- Token header defaults to `thoken` because the current backend reads `Constants.TOKEN_WEB = "thoken"`; override `VITE_TOKEN_HEADER` only when the backend token header changes.
+- Vite API proxy target and `/api` rewrite behavior must be configurable through env values to avoid conflicts with backend context paths.
 - Use brand blue `#00A1D6`, brand pink `#FB7299`, and gradient `linear-gradient(135deg, #00A1D6 0%, #FB7299 100%)`.
 - Support light background `#F4F6F8` and dark background `#1a1a1a`.
 - Video cards use `12px` border radius and hover lift shadow.
@@ -171,23 +173,28 @@ Create `D:\Git\bil-frontend\vite.config.js`:
 
 ```js
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-export default defineConfig({
-  plugins: [vue()],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  },
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:7071',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const rewriteApiPrefix = env.VITE_API_PROXY_REWRITE !== 'false'
+
+  return {
+    plugins: [vue()],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
+      }
+    },
+    server: {
+      port: 5173,
+      proxy: {
+        '/api': {
+          target: env.VITE_API_PROXY_TARGET || 'http://localhost:7071',
+          changeOrigin: true,
+          rewrite: rewriteApiPrefix ? (path) => path.replace(/^\/api/, '') : (path) => path
+        }
       }
     }
   }
@@ -221,6 +228,8 @@ Create `D:\Git\bil-frontend\.env.example`:
 ```text
 VITE_API_BASE_URL=/api
 VITE_TOKEN_HEADER=thoken
+VITE_API_PROXY_TARGET=http://localhost:7071
+VITE_API_PROXY_REWRITE=true
 ```
 
 - [ ] **Step 3: Create minimal Vue entry files**
@@ -398,6 +407,15 @@ describe('player store', () => {
     expect(store.current).toBe(null)
     expect(store.isPlaying).toBe(false)
   })
+
+  it('persists and restores the current queue across refreshes', () => {
+    const store = usePlayerStore()
+    store.play({ videoId: 'BV1', videoName: 'Demo', videoUrl: '/demo.mp4' })
+    setActivePinia(createPinia())
+    const restored = usePlayerStore()
+    expect(restored.current.videoId).toBe('BV1')
+    expect(restored.queue).toHaveLength(1)
+  })
 })
 ```
 
@@ -457,6 +475,15 @@ describe('user store', () => {
     await store.logout()
     expect(store.isLogin).toBe(false)
     expect(store.token).toBe('')
+  })
+
+  it('restores profile state through auto login when a token exists', async () => {
+    localStorage.setItem('bil-token', 'saved-token')
+    const store = useUserStore()
+    await store.autoLogin()
+    expect(store.isLogin).toBe(true)
+    expect(store.profile.useName).toBe('Auto')
+    expect(store.token).toBe('auto-token')
   })
 })
 ```
@@ -670,11 +697,15 @@ export const useUserStore = defineStore('user', {
       return registerApi(payload)
     },
     async autoLogin() {
+      if (!this.token) {
+        return null
+      }
       const profile = await autoLoginApi()
       if (profile?.token) {
         this.profile = profile
         this.token = profile.token
         setToken(profile.token)
+        eventBus.emit('auth:changed', this.profile)
       }
       return profile
     },
@@ -699,26 +730,51 @@ export const useUserStore = defineStore('user', {
 // D:\Git\bil-frontend\src\stores\player.js
 import { defineStore } from 'pinia'
 
+const PLAYER_KEY = 'bil-player-state'
+
+function loadPlayerState() {
+  try {
+    return JSON.parse(localStorage.getItem(PLAYER_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function savePlayerState(state) {
+  localStorage.setItem(PLAYER_KEY, JSON.stringify({
+    queue: state.queue,
+    current: state.current,
+    currentTime: state.currentTime,
+    muted: state.muted,
+    volume: state.volume
+  }))
+}
+
 export const usePlayerStore = defineStore('player', {
-  state: () => ({
-    queue: [],
-    current: null,
-    isPlaying: false,
-    currentTime: 0,
-    muted: false,
-    volume: 0.8
-  }),
+  state: () => {
+    const saved = loadPlayerState()
+    return {
+      queue: saved.queue || [],
+      current: saved.current || null,
+      isPlaying: false,
+      currentTime: saved.currentTime || 0,
+      muted: saved.muted || false,
+      volume: saved.volume ?? 0.8
+    }
+  },
   actions: {
     play(video) {
       this.current = video
       this.isPlaying = true
       this.enqueue(video)
+      savePlayerState(this)
     },
     enqueue(video) {
       if (!video?.videoId) return
       const exists = this.queue.some((item) => item.videoId === video.videoId)
       if (!exists) {
         this.queue.push(video)
+        savePlayerState(this)
       }
     },
     removeFromQueue(videoId) {
@@ -727,6 +783,7 @@ export const usePlayerStore = defineStore('player', {
         this.current = this.queue[0] || null
         this.isPlaying = Boolean(this.current)
       }
+      savePlayerState(this)
     },
     togglePlay() {
       if (this.current) {
@@ -737,6 +794,7 @@ export const usePlayerStore = defineStore('player', {
       this.queue = []
       this.current = null
       this.isPlaying = false
+      savePlayerState(this)
     }
   }
 })
@@ -876,6 +934,28 @@ Modify `D:\Git\bil-frontend\src\App.vue`:
 <template>
   <router-view />
 </template>
+
+<script setup>
+import { onMounted, onUnmounted } from 'vue'
+import { eventBus } from '@/utils/eventBus'
+import { useThemeStore } from '@/stores/theme'
+import { useUserStore } from '@/stores/user'
+
+const themeStore = useThemeStore()
+const userStore = useUserStore()
+
+onMounted(() => {
+  themeStore.applyTheme()
+  eventBus.on('auth:required', userStore.openLoginDialog)
+  userStore.autoLogin().catch(() => {
+    userStore.openLoginDialog()
+  })
+})
+
+onUnmounted(() => {
+  eventBus.off('auth:required', userStore.openLoginDialog)
+})
+</script>
 ```
 
 Create `D:\Git\bil-frontend\src\router\index.js`:
@@ -1154,21 +1234,53 @@ Create `D:\Git\bil-frontend\src\components\layout\SideCategoryNav.vue`:
 ```vue
 <template>
   <aside class="side-nav">
-    <button v-for="item in categories" :key="item.id" type="button" class="nav-item">
-      {{ item.name }}
+    <button
+      v-for="item in categories"
+      :key="item.categoryId"
+      type="button"
+      class="nav-item"
+      :class="{ active: String(route.query.pCategoryId || '0') === String(item.categoryId) }"
+      @click="selectCategory(item)"
+    >
+      {{ item.categoryName }}
     </button>
   </aside>
 </template>
 
 <script setup>
-const categories = [
-  { id: 0, name: '推荐' },
-  { id: 1, name: '动画' },
-  { id: 2, name: '游戏' },
-  { id: 3, name: '音乐' },
-  { id: 4, name: '科技' },
-  { id: 5, name: '生活' }
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { loadAllCategoryApi } from '@/api/modules/category'
+
+const route = useRoute()
+const router = useRouter()
+const fallbackCategories = [
+  { categoryId: 0, categoryName: '推荐' },
+  { categoryId: 1, categoryName: '动画' },
+  { categoryId: 2, categoryName: '游戏' },
+  { categoryId: 3, categoryName: '音乐' },
+  { categoryId: 4, categoryName: '科技' },
+  { categoryId: 5, categoryName: '生活' }
 ]
+const categories = ref(fallbackCategories)
+
+async function loadCategories() {
+  try {
+    const data = await loadAllCategoryApi()
+    categories.value = Array.isArray(data) && data.length ? [{ categoryId: 0, categoryName: '推荐' }, ...data] : fallbackCategories
+  } catch {
+    categories.value = fallbackCategories
+  }
+}
+
+function selectCategory(item) {
+  router.push({
+    name: 'home',
+    query: item.categoryId ? { pCategoryId: item.categoryId } : {}
+  })
+}
+
+onMounted(loadCategories)
 </script>
 
 <style scoped>
@@ -1189,7 +1301,7 @@ const categories = [
   cursor: pointer;
 }
 
-.nav-item:first-child {
+.nav-item.active {
   color: #fff;
   border: 0;
   background: var(--bil-gradient);
@@ -1346,31 +1458,48 @@ git commit -m "feat: add frontend layout shell"
 Create `D:\Git\bil-frontend\src\utils\mockData.js`:
 
 ```js
+function cover(title, colorA, colorB) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="${colorA}"/><stop offset="1" stop-color="${colorB}"/></linearGradient></defs><rect width="960" height="540" fill="url(#g)"/><circle cx="760" cy="120" r="96" fill="rgba(255,255,255,.18)"/><circle cx="130" cy="430" r="132" fill="rgba(255,255,255,.14)"/><text x="72" y="296" fill="white" font-size="54" font-family="Arial, sans-serif" font-weight="700">${title}</text></svg>`
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
 export const mockVideos = [
   {
     videoId: 'BV1001',
     videoName: '夏日游戏混剪：高燃名场面合集',
-    videoCover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=900&q=80',
+    videoCover: cover('GAME MIX', '#00A1D6', '#FB7299'),
+    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     userName: 'MachU',
     playCount: 128000,
+    likeCount: 9300,
+    coinCount: 1600,
+    collectCount: 4200,
     danmuCount: 3420,
     duration: '12:48'
   },
   {
     videoId: 'BV1002',
     videoName: '从零开始写一个弹幕播放器',
-    videoCover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80',
+    videoCover: cover('DANMU DEV', '#00A1D6', '#6c7bff'),
+    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     userName: '前端研究所',
     playCount: 86000,
+    likeCount: 5100,
+    coinCount: 880,
+    collectCount: 2300,
     danmuCount: 1180,
     duration: '18:22'
   },
   {
     videoId: 'BV1003',
     videoName: '一天吃遍城市里的宝藏小店',
-    videoCover: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80',
+    videoCover: cover('CITY FOOD', '#FB7299', '#ffb86c'),
+    videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     userName: '生活观察员',
     playCount: 214000,
+    likeCount: 18800,
+    coinCount: 3900,
+    collectCount: 7600,
     danmuCount: 5680,
     duration: '09:37'
   }
@@ -1495,14 +1624,15 @@ Modify `D:\Git\bil-frontend\src\views\HomeView.vue`:
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { loadRecommendVideoApi } from '@/api/modules/video'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { loadRecommendVideoApi, loadVideoApi } from '@/api/modules/video'
 import VideoCard from '@/components/video/VideoCard.vue'
 import { usePlayerStore } from '@/stores/player'
 import { mockVideos } from '@/utils/mockData'
 
 const router = useRouter()
+const route = useRoute()
 const playerStore = usePlayerStore()
 const loading = ref(false)
 const videos = ref(mockVideos)
@@ -1510,8 +1640,11 @@ const videos = ref(mockVideos)
 async function loadVideos() {
   loading.value = true
   try {
-    const data = await loadRecommendVideoApi()
-    videos.value = Array.isArray(data) && data.length ? data : mockVideos
+    const data = route.query.pCategoryId
+      ? await loadVideoApi({ pCategoryId: route.query.pCategoryId, pageNo: 1 })
+      : await loadRecommendVideoApi()
+    const list = Array.isArray(data?.list) ? data.list : data
+    videos.value = Array.isArray(list) && list.length ? list : mockVideos
   } catch {
     videos.value = mockVideos
   } finally {
@@ -1525,6 +1658,7 @@ function openVideo(video) {
 }
 
 onMounted(loadVideos)
+watch(() => route.query.pCategoryId, loadVideos)
 </script>
 
 <style scoped>
@@ -1689,6 +1823,7 @@ git commit -m "feat: add home and search video pages"
 **Interfaces:**
 - Consumes: `useUserStore.openLoginDialog()`, `usePlayerStore.play(video)`, `eventBus`.
 - Produces: interaction events `video:liked`, `video:collected`, and `danmu:posted`.
+- `InteractionBar` consumes the full `video` object so initial like, collect, and coin counts render from backend video detail data.
 
 - [ ] **Step 1: Implement login dialog**
 
@@ -1809,34 +1944,44 @@ Create `D:\Git\bil-frontend\src\components\video\InteractionBar.vue`:
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 import { doActionApi } from '@/api/modules/video'
 import { eventBus } from '@/utils/eventBus'
 
 const props = defineProps({
-  videoId: {
-    type: String,
+  video: {
+    type: Object,
     required: true
   }
 })
 
 const counts = reactive({ like: 0, collect: 0, coin: 0 })
 
+watch(
+  () => props.video,
+  (video) => {
+    counts.like = Number(video?.likeCount || 0)
+    counts.collect = Number(video?.collectCount || 0)
+    counts.coin = Number(video?.coinCount || 0)
+  },
+  { immediate: true }
+)
+
 async function like() {
   counts.like += 1
-  await doActionApi({ videoId: props.videoId, actionType: 0, actionCount: 1 })
-  eventBus.emit('video:liked', props.videoId)
+  await doActionApi({ videoId: props.video.videoId, actionType: 0, actionCount: 1 })
+  eventBus.emit('video:liked', props.video.videoId)
 }
 
 async function collect() {
   counts.collect += 1
-  await doActionApi({ videoId: props.videoId, actionType: 2, actionCount: 1 })
-  eventBus.emit('video:collected', props.videoId)
+  await doActionApi({ videoId: props.video.videoId, actionType: 2, actionCount: 1 })
+  eventBus.emit('video:collected', props.video.videoId)
 }
 
 async function coin() {
   counts.coin += 1
-  await doActionApi({ videoId: props.videoId, actionType: 1, actionCount: 1 })
+  await doActionApi({ videoId: props.video.videoId, actionType: 1, actionCount: 1 })
 }
 </script>
 
@@ -2030,11 +2175,11 @@ Modify `D:\Git\bil-frontend\src\views\VideoDetailView.vue`:
   <section class="detail-view">
     <div class="main-column">
       <div class="player-box">
-        <video controls :poster="video.videoCover" />
+        <video controls :poster="video.videoCover" :src="videoSource" />
       </div>
       <h1>{{ video.videoName }}</h1>
       <p class="meta">{{ video.playCount || 0 }} 播放 · {{ video.danmuCount || 0 }} 弹幕</p>
-      <InteractionBar :video-id="videoId" />
+      <InteractionBar :video="video" />
       <CommentList :video-id="videoId" />
     </div>
     <div class="side-column">
@@ -2065,11 +2210,17 @@ const videoId = computed(() => route.params.videoId)
 const video = ref(mockVideos[0])
 const related = ref(mockVideos.slice(1))
 const fileId = ref('')
+const videoSource = computed(() => {
+  if (video.value.videoUrl) return video.value.videoUrl
+  if (video.value.filePath) return video.value.filePath
+  if (fileId.value) return `/api/file/videoResource/${fileId.value}`
+  return mockVideos[0].videoUrl
+})
 
 async function loadDetail() {
   try {
     const data = await getVideoInfoApi({ videoId: videoId.value })
-    video.value = data || mockVideos[0]
+    video.value = { ...mockVideos[0], ...(data || {}) }
     playerStore.play(video.value)
   } catch {
     video.value = mockVideos.find((item) => item.videoId === videoId.value) || mockVideos[0]
@@ -2077,6 +2228,10 @@ async function loadDetail() {
   try {
     const files = await loadVideoPListApi({ videoId: videoId.value })
     fileId.value = Array.isArray(files) && files[0] ? files[0].fileId : ''
+    if (Array.isArray(files) && files[0]?.filePath && !video.value.videoUrl) {
+      video.value = { ...video.value, filePath: files[0].filePath }
+      playerStore.play(video.value)
+    }
   } catch {
     fileId.value = ''
   }
@@ -2445,9 +2600,13 @@ Copy `.env.example` to `.env.local` when local API settings differ.
 ```text
 VITE_API_BASE_URL=/api
 VITE_TOKEN_HEADER=thoken
+VITE_API_PROXY_TARGET=http://localhost:7071
+VITE_API_PROXY_REWRITE=true
 ```
 
-The Vite dev server proxies `/api` to `http://localhost:7071`.
+The Vite dev server proxies `/api` to `VITE_API_PROXY_TARGET`.
+Keep `VITE_API_PROXY_REWRITE=true` for the current backend where frontend `/api/account/login` should become backend `/account/login`.
+Set `VITE_API_PROXY_REWRITE=false` only if the backend itself is mounted under `/api`.
 ```
 
 - [ ] **Step 3: Run full verification**
