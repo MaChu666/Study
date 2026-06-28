@@ -5,6 +5,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.security.SecureRandom;
 
 
 public class StringTools {
@@ -64,6 +65,18 @@ public class StringTools {
 
     public static final String encodeByMd5(String originString) {
         return StringTools.isEmpty(originString) ? null : DigestUtils.md5Hex(originString);
+    }
+
+    private static final String BV_CHARS = "123456789ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
+    private static final int BV_RANDOM_LENGTH = 10;
+    private static final SecureRandom BV_RANDOM = new SecureRandom();
+
+    public static final String getRandomBVId() {
+        StringBuilder sb = new StringBuilder("BV");
+        for (int i = 0; i < BV_RANDOM_LENGTH; i++) {
+            sb.append(BV_CHARS.charAt(BV_RANDOM.nextInt(BV_CHARS.length())));
+        }
+        return sb.toString();
     }
 
 }

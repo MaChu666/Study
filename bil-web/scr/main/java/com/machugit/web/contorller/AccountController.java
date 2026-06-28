@@ -3,6 +3,7 @@ package com.machugit.web.contorller;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.machugit.entity.query.UserInfoQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,6 +92,15 @@ public class AccountController extends ABaseController{
 			redisComponent.clearCheckCode(checkCodeKey);
 			Cookie[] cookies = request.getCookies();
 		}
+	}
+
+	@RequestMapping("/getUserCountInfo")
+	public ResponseVO getUserCountInfo() {
+		UserInfoQuery query = new UserInfoQuery();
+		Integer userCount = userInfoService.findCountByParam(query);
+		Map<String, Integer> result = new HashMap<>();
+		result.put("userCount", userCount);
+		return getSuccessResponseVO(result);
 	}
 
 	@RequestMapping("/autologin")

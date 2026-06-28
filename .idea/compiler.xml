@@ -6,17 +6,23 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="bil-common (1)" />
         <module name="bil-admin" />
-        <module name="bil-common" />
+        <module name="bil-admin (1)" />
         <module name="bil-web" />
+        <module name="bil-common" />
+        <module name="bil-web (1)" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="bil-admin" options="-parameters" />
+      <module name="bil-admin (1)" options="-parameters" />
       <module name="bil-common" options="-parameters" />
+      <module name="bil-common (1)" options="-parameters" />
       <module name="bil-web" options="-parameters" />
+      <module name="bil-web (1)" options="-parameters" />
     </option>
   </component>
 </project>

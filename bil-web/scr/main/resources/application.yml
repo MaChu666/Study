@@ -1,10 +1,12 @@
 server:
   port: 7071
+  tomcat:
+    max-swallow-size: 100MB
 spring:
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 15MB
+      max-file-size: 500MB
+      max-request-size: 500MB
   application:
     name: bil-web
   datasource:

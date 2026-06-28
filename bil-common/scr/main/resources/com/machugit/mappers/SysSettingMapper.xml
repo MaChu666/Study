@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.SysSettingMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.SysSetting">
+		<!--id-->
+		<result column="id" property="id"  />
+		<!--最大文件大小-->
+		<result column="max_file_size" property="maxFileSize"  />
+		<!--最大分片大小-->
+		<result column="max_chunk_size" property="maxChunkSize"  />
+		<!--评论开关（0：关闭 1：开启）-->
+		<result column="comment_open" property="commentOpen"  />
+		<!--弹幕开关（0：关闭 1：开启）-->
+		<result column="danmu_open" property="danmuOpen"  />
+		<!--视频审核开关（0：关闭 1：开启）-->
+		<result column="video_audit" property="videoAudit"  />
+		<!--注册开关（0：关闭 1：开启）-->
+		<result column="register_open" property="registerOpen"  />
+		<!--系统名称-->
+		<result column="sys_name" property="sysName"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 s.id,s.max_file_size,s.max_chunk_size,s.comment_open,
+		 s.danmu_open,s.video_audit,s.register_open,s.sys_name
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.id != null">
+				 and  s.id = #{query.id}
+			</if>
+			<if test="query.maxFileSize != null">
+				 and  s.max_file_size = #{query.maxFileSize}
+			</if>
+			<if test="query.maxChunkSize != null">
+				 and  s.max_chunk_size = #{query.maxChunkSize}
+			</if>
+			<if test="query.commentOpen != null">
+				 and  s.comment_open = #{query.commentOpen}
+			</if>
+			<if test="query.danmuOpen != null">
+				 and  s.danmu_open = #{query.danmuOpen}
+			</if>
+			<if test="query.videoAudit != null">
+				 and  s.video_audit = #{query.videoAudit}
+			</if>
+			<if test="query.registerOpen != null">
+				 and  s.register_open = #{query.registerOpen}
+			</if>
+			<if test="query.sysName != null and query.sysName!=''">
+				 and  s.sys_name = #{query.sysName}
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.sysNameFuzzy!= null  and query.sysNameFuzzy!=''">
+				 and  s.sys_name like concat('%', #{query.sysNameFuzzy}, '%')
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM sys_setting s <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM sys_setting s <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.SysSetting">
+		 INSERT INTO sys_setting
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.maxFileSize != null">
+				 max_file_size,
+			</if>
+			<if test="bean.maxChunkSize != null">
+				 max_chunk_size,
+			</if>
+			<if test="bean.commentOpen != null">
+				 comment_open,
+			</if>
+			<if test="bean.danmuOpen != null">
+				 danmu_open,
+			</if>
+			<if test="bean.videoAudit != null">
+				 video_audit,
+			</if>
+			<if test="bean.registerOpen != null">
+				 register_open,
+			</if>
+			<if test="bean.sysName != null">
+				 sys_name,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.maxFileSize!=null">
+				 #{bean.maxFileSize},
+			</if>
+			<if test="bean.maxChunkSize!=null">
+				 #{bean.maxChunkSize},
+			</if>
+			<if test="bean.commentOpen!=null">
+				 #{bean.commentOpen},
+			</if>
+			<if test="bean.danmuOpen!=null">
+				 #{bean.danmuOpen},
+			</if>
+			<if test="bean.videoAudit!=null">
+				 #{bean.videoAudit},
+			</if>
+			<if test="bean.registerOpen!=null">
+				 #{bean.registerOpen},
+			</if>
+			<if test="bean.sysName!=null">
+				 #{bean.sysName},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.SysSetting">
+		 INSERT INTO sys_setting
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.maxFileSize != null">
+				 max_file_size,
+			</if>
+			<if test="bean.maxChunkSize != null">
+				 max_chunk_size,
+			</if>
+			<if test="bean.commentOpen != null">
+				 comment_open,
+			</if>
+			<if test="bean.danmuOpen != null">
+				 danmu_open,
+			</if>
+			<if test="bean.videoAudit != null">
+				 video_audit,
+			</if>
+			<if test="bean.registerOpen != null">
+				 register_open,
+			</if>
+			<if test="bean.sysName != null">
+				 sys_name,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.maxFileSize!=null">
+				 #{bean.maxFileSize},
+			</if>
+			<if test="bean.maxChunkSize!=null">
+				 #{bean.maxChunkSize},
+			</if>
+			<if test="bean.commentOpen!=null">
+				 #{bean.commentOpen},
+			</if>
+			<if test="bean.danmuOpen!=null">
+				 #{bean.danmuOpen},
+			</if>
+			<if test="bean.videoAudit!=null">
+				 #{bean.videoAudit},
+			</if>
+			<if test="bean.registerOpen!=null">
+				 #{bean.registerOpen},
+			</if>
+			<if test="bean.sysName!=null">
+				 #{bean.sysName},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 id = VALUES(id),
+			</if>
+			<if test="bean.maxFileSize!=null">
+				 max_file_size = VALUES(max_file_size),
+			</if>
+			<if test="bean.maxChunkSize!=null">
+				 max_chunk_size = VALUES(max_chunk_size),
+			</if>
+			<if test="bean.commentOpen!=null">
+				 comment_open = VALUES(comment_open),
+			</if>
+			<if test="bean.danmuOpen!=null">
+				 danmu_open = VALUES(danmu_open),
+			</if>
+			<if test="bean.videoAudit!=null">
+				 video_audit = VALUES(video_audit),
+			</if>
+			<if test="bean.registerOpen!=null">
+				 register_open = VALUES(register_open),
+			</if>
+			<if test="bean.sysName!=null">
+				 sys_name = VALUES(sys_name),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.SysSetting">
+		 INSERT INTO sys_setting(
+			 id,
+			 max_file_size,
+			 max_chunk_size,
+			 comment_open,
+			 danmu_open,
+			 video_audit,
+			 register_open,
+			 sys_name
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.id},
+				 #{item.maxFileSize},
+				 #{item.maxChunkSize},
+				 #{item.commentOpen},
+				 #{item.danmuOpen},
+				 #{item.videoAudit},
+				 #{item.registerOpen},
+				 #{item.sysName}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.SysSetting">
+		 INSERT INTO sys_setting(
+			 id,
+			 max_file_size,
+			 max_chunk_size,
+			 comment_open,
+			 danmu_open,
+			 video_audit,
+			 register_open,
+			 sys_name
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.id},
+				 #{item.maxFileSize},
+				 #{item.maxChunkSize},
+				 #{item.commentOpen},
+				 #{item.danmuOpen},
+				 #{item.videoAudit},
+				 #{item.registerOpen},
+				 #{item.sysName}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			id = VALUES(id),
+			max_file_size = VALUES(max_file_size),
+			max_chunk_size = VALUES(max_chunk_size),
+			comment_open = VALUES(comment_open),
+			danmu_open = VALUES(danmu_open),
+			video_audit = VALUES(video_audit),
+			register_open = VALUES(register_open),
+			sys_name = VALUES(sys_name)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.SysSettingQuery">
+		 UPDATE sys_setting s
+ 		 <set>
+			<if test="bean.id != null">
+				 id = #{bean.id},
+			</if>
+			<if test="bean.maxFileSize != null">
+				 max_file_size = #{bean.maxFileSize},
+			</if>
+			<if test="bean.maxChunkSize != null">
+				 max_chunk_size = #{bean.maxChunkSize},
+			</if>
+			<if test="bean.commentOpen != null">
+				 comment_open = #{bean.commentOpen},
+			</if>
+			<if test="bean.danmuOpen != null">
+				 danmu_open = #{bean.danmuOpen},
+			</if>
+			<if test="bean.videoAudit != null">
+				 video_audit = #{bean.videoAudit},
+			</if>
+			<if test="bean.registerOpen != null">
+				 register_open = #{bean.registerOpen},
+			</if>
+			<if test="bean.sysName != null">
+				 sys_name = #{bean.sysName},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete s from sys_setting s
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据Id修改-->
+	<update id="updateById" parameterType="com.machugit.entity.po.SysSetting">
+		 UPDATE sys_setting
+ 		 <set>
+			<if test="bean.maxFileSize != null">
+				 max_file_size = #{bean.maxFileSize},
+			</if>
+			<if test="bean.maxChunkSize != null">
+				 max_chunk_size = #{bean.maxChunkSize},
+			</if>
+			<if test="bean.commentOpen != null">
+				 comment_open = #{bean.commentOpen},
+			</if>
+			<if test="bean.danmuOpen != null">
+				 danmu_open = #{bean.danmuOpen},
+			</if>
+			<if test="bean.videoAudit != null">
+				 video_audit = #{bean.videoAudit},
+			</if>
+			<if test="bean.registerOpen != null">
+				 register_open = #{bean.registerOpen},
+			</if>
+			<if test="bean.sysName != null">
+				 sys_name = #{bean.sysName},
+			</if>
+ 		 </set>
+ 		 where id=#{id}
+	</update>
+
+	<!-- 根据Id删除-->
+	<delete id="deleteById">
+		delete from sys_setting where id=#{id}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectById" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from sys_setting s where id=#{id}
+	</select>
+
+</mapper>

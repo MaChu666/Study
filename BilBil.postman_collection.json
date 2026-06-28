@@ -1,0 +1,750 @@
+{
+  "info": {
+    "name": "BilBil API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:7071"
+    }
+  ],
+  "item": [
+    {
+      "name": "账号",
+      "item": [
+        {
+          "name": "获取验证码",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/account/checkCode",
+            "description": "生成算术验证码，返回 base64 图片和 checkCodeKey"
+          }
+        },
+        {
+          "name": "注册",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/account/register",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "email", "value": "test@test.com", "type": "text" },
+                { "key": "useName", "value": "testuser", "type": "text" },
+                { "key": "registerPassword", "value": "", "type": "text", "description": "须含字母+数字，6-20位" },
+                { "key": "checkCodeKey", "value": "", "type": "text" },
+                { "key": "checkCode", "value": "", "type": "text", "description": "算术验证码答案" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "登录",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/account/login",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "email", "value": "test@test.com", "type": "text" },
+                { "key": "password", "value": "", "type": "text", "description": "MD5 加密后的密码" },
+                { "key": "checkCodeKey", "value": "", "type": "text" },
+                { "key": "checkCode", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "自动登录",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/account/autologin"
+          }
+        },
+        {
+          "name": "退出登录",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/account/logout"
+          }
+        },
+        {
+          "name": "获取用户数量信息",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/account/getUserCountInfo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "分类",
+      "item": [
+        {
+          "name": "获取所有分类",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/category/loadAllCategory"
+          }
+        }
+      ]
+    },
+    {
+      "name": "系统设置",
+      "item": [
+        {
+          "name": "获取系统设置",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/sysSetting/getSetting"
+          }
+        }
+      ]
+    },
+    {
+      "name": "文件",
+      "item": [
+        {
+          "name": "获取资源信息",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/file/getResource",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "sourceName", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "文件预上传",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/file/preUploadVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "fileName", "value": "", "type": "text" },
+                { "key": "chunks", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "上传视频",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/file/uploadVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "chunkFile", "value": "", "type": "text" },
+                { "key": "chunkIndex", "value": "", "type": "text" },
+                { "key": "uploadId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "删除视频",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/file/delUploadVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "uploadId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "上传图片",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/file/uploadImage",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "value": "", "type": "text" },
+                { "key": "createThumbnail", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取视频 M3U8",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/file/videoResource/{{fileId}}"
+          }
+        },
+        {
+          "name": "获取视频 TS",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/file/videoResource/{{fileId}}/{{ts}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "视频",
+      "item": [
+        {
+          "name": "获取推荐视频",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/loadRecommendVideo"
+          }
+        },
+        {
+          "name": "获取视频列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/loadVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "pCategoryId", "value": "", "type": "text" },
+                { "key": "categoryId", "value": "", "type": "text" },
+                { "key": "pageNo", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取视频详情",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/getVideoInfo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取视频分P",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/loadVideoPList",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "搜索",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/search",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "keyword", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "搜索热词",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/getSearchKeywordTop"
+          }
+        },
+        {
+          "name": "视频推荐",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/getVideoRecommend",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "热门视频",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/loadHotVideoList"
+          }
+        },
+        {
+          "name": "视频在线人数上报",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/video/reportVideoPlayOnline",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "fileId", "value": "", "type": "text" },
+                { "key": "deviceId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "弹幕",
+      "item": [
+        {
+          "name": "发布弹幕",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/danmu/postDanmu",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" },
+                { "key": "fileId", "value": "", "type": "text" },
+                { "key": "text", "value": "", "type": "text" },
+                { "key": "mode", "value": "1", "type": "text" },
+                { "key": "color", "value": "#FFFFFF", "type": "text" },
+                { "key": "time", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取弹幕列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/danmu/loadDanmu",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" },
+                { "key": "fileId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "用户行为",
+      "item": [
+        {
+          "name": "用户行为",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/userAction/doAction",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" },
+                { "key": "actionType", "value": "1", "type": "text", "description": "1:点赞 2:投币" },
+                { "key": "actionCount", "value": "1", "type": "text" },
+                { "key": "commentId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "评论",
+      "item": [
+        {
+          "name": "发布评论",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/comment/postComment",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" },
+                { "key": "content", "value": "", "type": "text" },
+                { "key": "replyCommentId", "value": "0", "type": "text" },
+                { "key": "imgPath", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取评论列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/comment/loadComment",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videoId", "value": "", "type": "text" },
+                { "key": "pageNo", "value": "1", "type": "text" },
+                { "key": "orderType", "value": "0", "type": "text", "description": "0:最新 1:最旧" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "评论置顶",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/comment/topComment",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "commentId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "取消评论置顶",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/comment/cancelTopComment",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "commentId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "删除评论",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/comment/userDelComment",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "commentId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "播放历史",
+      "item": [
+        {
+          "name": "获取播放历史",
+          "request": { "method": "POST", "url": "{{baseUrl}}/history/loadHistory" }
+        },
+        {
+          "name": "删除播放历史",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/history/delHistory",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "historyId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "清除播放历史",
+          "request": { "method": "POST", "url": "{{baseUrl}}/history/cleanHistory" }
+        }
+      ]
+    },
+    {
+      "name": "消息",
+      "item": [
+        {
+          "name": "未读消息数",
+          "request": { "method": "POST", "url": "{{baseUrl}}/message/getNoReadCount" }
+        },
+        {
+          "name": "消息列表",
+          "request": { "method": "POST", "url": "{{baseUrl}}/message/loadMessage" }
+        },
+        {
+          "name": "删除消息",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/message/delMessage",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "messageId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "分组消息数",
+          "request": { "method": "POST", "url": "{{baseUrl}}/message/getNoReadCountGroup" }
+        },
+        {
+          "name": "全部已读",
+          "request": { "method": "POST", "url": "{{baseUrl}}/message/readAll" }
+        }
+      ]
+    },
+    {
+      "name": "个人主页",
+      "item": [
+        {
+          "name": "更新用户信息",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/updateUserInfo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" },
+                { "key": "useName", "value": "", "type": "text" },
+                { "key": "personProfile", "value": "", "type": "text" },
+                { "key": "school", "value": "", "type": "text" },
+                { "key": "birthday", "value": "", "type": "text" },
+                { "key": "sex", "value": "", "type": "text", "description": "0:未知 1:男 2:女" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "个人主页视频列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/loadVideoList",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" },
+                { "key": "pageNo", "value": "1", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取用户信息",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/getUserInfo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "关注",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/focus",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" },
+                { "key": "focusUserId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "取消关注",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/cancelFocus",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" },
+                { "key": "focusUserId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "关注列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/loadFocusList",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "粉丝列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/loadFansList",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "收藏列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/loadUserCollection",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "保存主题",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/saveTheme",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" },
+                { "key": "theme", "value": "1", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "视频系列",
+      "item": [
+        {
+          "name": "视频系列列表",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/loadVideoSeries",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取系列视频",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/loadAllVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "seriesId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "修改系列顺序",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/changeVideoSeriesSort",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "seriesIds", "value": "", "type": "text", "description": "逗号分隔的系列ID列表" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "删除系列",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/delVideoSeries",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "seriesId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "保存系列",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/saveVideoSeries",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "seriesId", "value": "0", "type": "text", "description": "0 为新建" },
+                { "key": "seriesName", "value": "", "type": "text" },
+                { "key": "seriesDescription", "value": "", "type": "text" },
+                { "key": "userId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "保存系列视频",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/saveSeriesVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "seriesId", "value": "", "type": "text" },
+                { "key": "videoId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "删除系列视频",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/delSeriesVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "id", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取所有系列（含视频）",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/uhome/series/loadVideoSeriesWithVideo",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "userId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "系列详情",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/series/getVideoSeriesDetail",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "seriesId", "value": "", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

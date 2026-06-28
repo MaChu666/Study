@@ -98,7 +98,18 @@ public class ABaseController {
     protected TokenUserInfoDto getTokenUserInfoDto() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String token = request.getHeader(Constants.TOKEN_WEB);
-        return redisComponent.getTokenUserInfo(token);
+        if (token == null) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (Constants.TOKEN_WEB.equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+        return token != null ? redisComponent.getTokenUserInfo(token) : null;
     }
 
     //清除token设置cookie为初始

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.SeriesVideoMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.SeriesVideo">
+		<!--id-->
+		<result column="id" property="id"  />
+		<!--系列id-->
+		<result column="series_id" property="seriesId"  />
+		<!--视频id-->
+		<result column="video_id" property="videoId"  />
+		<!--排序-->
+		<result column="sort" property="sort"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 v.id,v.series_id,v.video_id,v.sort
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.id != null">
+				 and  v.id = #{query.id}
+			</if>
+			<if test="query.seriesId != null">
+				 and  v.series_id = #{query.seriesId}
+			</if>
+			<if test="query.videoId != null and query.videoId!=''">
+				 and  v.video_id = #{query.videoId}
+			</if>
+			<if test="query.sort != null">
+				 and  v.sort = #{query.sort}
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM series_video v <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM series_video v <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.SeriesVideo">
+		 INSERT INTO series_video
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.seriesId != null">
+				 series_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.sort != null">
+				 sort,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.seriesId!=null">
+				 #{bean.seriesId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.sort!=null">
+				 #{bean.sort},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.SeriesVideo">
+		 INSERT INTO series_video
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.seriesId != null">
+				 series_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.sort != null">
+				 sort,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.seriesId!=null">
+				 #{bean.seriesId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.sort!=null">
+				 #{bean.sort},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 id = VALUES(id),
+			</if>
+			<if test="bean.seriesId!=null">
+				 series_id = VALUES(series_id),
+			</if>
+			<if test="bean.videoId!=null">
+				 video_id = VALUES(video_id),
+			</if>
+			<if test="bean.sort!=null">
+				 sort = VALUES(sort),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.SeriesVideo">
+		 INSERT INTO series_video(
+			 id,
+			 series_id,
+			 video_id,
+			 sort
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.id},
+				 #{item.seriesId},
+				 #{item.videoId},
+				 #{item.sort}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.SeriesVideo">
+		 INSERT INTO series_video(
+			 id,
+			 series_id,
+			 video_id,
+			 sort
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.id},
+				 #{item.seriesId},
+				 #{item.videoId},
+				 #{item.sort}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			id = VALUES(id),
+			series_id = VALUES(series_id),
+			video_id = VALUES(video_id),
+			sort = VALUES(sort)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.SeriesVideoQuery">
+		 UPDATE series_video v
+ 		 <set>
+			<if test="bean.id != null">
+				 id = #{bean.id},
+			</if>
+			<if test="bean.seriesId != null">
+				 series_id = #{bean.seriesId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.sort != null">
+				 sort = #{bean.sort},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete v from series_video v
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据Id修改-->
+	<update id="updateById" parameterType="com.machugit.entity.po.SeriesVideo">
+		 UPDATE series_video
+ 		 <set>
+			<if test="bean.seriesId != null">
+				 series_id = #{bean.seriesId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.sort != null">
+				 sort = #{bean.sort},
+			</if>
+ 		 </set>
+ 		 where id=#{id}
+	</update>
+
+	<!-- 根据Id删除-->
+	<delete id="deleteById">
+		delete from series_video where id=#{id}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectById" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from series_video v where id=#{id}
+	</select>
+
+	<!-- 根据SeriesId修改-->
+	<update id="updateBySeriesId" parameterType="com.machugit.entity.po.SeriesVideo">
+		 UPDATE series_video
+ 		 <set>
+			<if test="bean.id != null">
+				 id = #{bean.id},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.sort != null">
+				 sort = #{bean.sort},
+			</if>
+ 		 </set>
+ 		 where series_id=#{seriesId}
+	</update>
+
+	<!-- 根据SeriesId删除-->
+	<delete id="deleteBySeriesId">
+		delete from series_video where series_id=#{seriesId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectBySeriesId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from series_video v where series_id=#{seriesId}
+	</select>
+
+</mapper>

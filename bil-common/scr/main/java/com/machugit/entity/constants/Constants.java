@@ -20,6 +20,18 @@ public class Constants {
     public static final Integer ONE = 1;
 
     public static final String REDIS_KEY_TOKEN_WEB= REDIS_KEY_PREFIX+"token:web:";
+    public static final String REDIS_KEY_TOKEN_ADMIN= REDIS_KEY_PREFIX+"token:admin:";
     public static final String TOKEN_WEB="thoken";
+
+    //管理员用户ID列表
+    public static final String[] ADMIN_USER_IDS = {"5896561791"};
+
+    public static boolean isAdmin(String userId) {
+        if (userId == null) return false;
+        for (String adminId : ADMIN_USER_IDS) {
+            if (adminId.equals(userId)) return true;
+        }
+        return false;
+    }
 
 }
