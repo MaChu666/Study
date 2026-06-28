@@ -1,0 +1,9 @@
+.bil-gradient-button {
+  border: 0;
+  color: #fff;
+  background: var(--bil-gradient);
+}
+
+.el-message {
+  border-radius: 10px;
+}
