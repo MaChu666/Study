@@ -4,11 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.machugit.component.RedisComponent;
+import com.machugit.entity.config.AdminConfig;
 import com.machugit.entity.constants.Constants;
 import com.machugit.entity.dto.TokenUserInfoDto;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.exception.BusinessException;
-import com.machugit.service.impl.UserInfoServiceImpl;
+import com.machugit.utils.StringTools;
 import com.wf.captcha.ArithmeticCaptcha;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,10 +26,10 @@ import javax.validation.constraints.NotEmpty;
 public class AdminAccountController extends ABaseAdminController {
 
     @Resource
-    private UserInfoServiceImpl userInfoService;
+    private RedisComponent redisComponent;
 
     @Resource
-    private RedisComponent redisComponent;
+    private AdminConfig adminConfig;
 
     @RequestMapping("/checkCode")
     public ResponseVO checkCode() {
@@ -46,7 +47,7 @@ public class AdminAccountController extends ABaseAdminController {
     @RequestMapping("/login")
     public ResponseVO login(HttpServletRequest request,
                             HttpServletResponse response,
-                            @NotEmpty String email,
+                            @NotEmpty String account,
                             @NotEmpty String password,
                             @NotEmpty String checkCodeKey,
                             @NotEmpty String checkCode) {
@@ -55,14 +56,15 @@ public class AdminAccountController extends ABaseAdminController {
             if (codeFromRedis == null || !checkCode.trim().equalsIgnoreCase(codeFromRedis)) {
                 throw new BusinessException("验证码错误");
             }
-            String ip = getIpAddr();
-            TokenUserInfoDto tokenUserInfoDto = userInfoService.login(email, password, ip);
-            if (!Constants.isAdmin(tokenUserInfoDto.getUserId())) {
-                redisComponent.cleanTokenInfo(tokenUserInfoDto.getToken());
-                throw new BusinessException("非管理员账号，无法登录后台");
+            if (!adminConfig.getAccount().equals(account) || !StringTools.encodeByMd5(adminConfig.getPassword()).equals(password)) {
+                throw new BusinessException("账号或密码错误");
             }
-            saveToken2Cookie(response, tokenUserInfoDto.getToken());
-            return getSuccessResponseVO(tokenUserInfoDto);
+            String token = redisComponent.saveAdminTokenInfo(account);
+            saveToken2Cookie(response, token);
+            Map<String, String> result = new HashMap<>();
+            result.put("token", token);
+            result.put("account", account);
+            return getSuccessResponseVO(result);
         } finally {
             redisComponent.clearCheckCode(checkCodeKey);
         }

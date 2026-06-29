@@ -1,12 +1,9 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { eventBus } from '@/utils/eventBus'
-import { clearToken, getToken } from '@/utils/token'
-
-const tokenHeader = import.meta.env.VITE_TOKEN_HEADER || 'thoken'
+import { clearToken, getToken } from '@/stores/auth'
 
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: '/admin',
   timeout: 15000,
   withCredentials: true
 })
@@ -18,23 +15,18 @@ function isPlainObject(value) {
 function toFormParams(data) {
   const params = new URLSearchParams()
   Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
+    if (value !== undefined && value !== null && value !== '') {
       params.append(key, String(value))
     }
   })
   return params
 }
 
-function isLoginRequired(payload) {
-  const info = String(payload?.info || '')
-  return payload?.code === 401 || payload?.code === 901 || (payload?.code === 600 && (info.includes('请先登录') || info.includes('未登录')))
-}
-
 service.interceptors.request.use((config) => {
   const token = getToken()
-  config.headers = config.headers || {}
   if (token) {
-    config.headers[tokenHeader] = token
+    config.headers = config.headers || {}
+    config.headers.thokenAdmin = token
   }
   if (String(config.method || 'get').toLowerCase() === 'post' && isPlainObject(config.data)) {
     config.data = toFormParams(config.data)
@@ -46,27 +38,19 @@ service.interceptors.request.use((config) => {
 service.interceptors.response.use(
   (response) => {
     const payload = response.data
-    if (!payload || typeof payload.code === 'undefined') {
-      return payload
-    }
-    if (payload.code === 200) {
-      return payload.data
-    }
-    if (response.status === 401 || isLoginRequired(payload)) {
+    if (!payload || typeof payload.code === 'undefined') return payload
+    if (payload.code === 200) return payload.data !== undefined ? payload.data : payload
+    if (payload.code === 401 || payload.code === 901 || response.status === 401) {
       clearToken()
-      if (payload.code === 901 && window.location.pathname.includes('/admin')) {
-        window.location.href = '/admin/account/login'
-        return Promise.reject(new Error(payload.info || '未登录'))
-      }
-      eventBus.emit('auth:required')
+      window.location.href = '/login'
     }
     ElMessage.error(payload.info || '请求失败')
     return Promise.reject(new Error(payload.info || '请求失败'))
   },
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 901) {
       clearToken()
-      eventBus.emit('auth:required')
+      window.location.href = '/login'
     }
     ElMessage.error(error.message || '网络异常')
     return Promise.reject(error)

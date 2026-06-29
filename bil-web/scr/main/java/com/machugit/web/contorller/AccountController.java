@@ -90,7 +90,6 @@ public class AccountController extends ABaseController{
 			return getSuccessResponseVO(tokenUserInfoDto);
 		}finally {
 			redisComponent.clearCheckCode(checkCodeKey);
-			Cookie[] cookies = request.getCookies();
 		}
 	}
 

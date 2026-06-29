@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env.local
+.vite/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+*.log

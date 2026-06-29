@@ -2,7 +2,6 @@ package com.machugit.admin.controller;
 
 import com.machugit.component.RedisComponent;
 import com.machugit.entity.constants.Constants;
-import com.machugit.entity.dto.TokenUserInfoDto;
 import com.machugit.entity.enums.ResponseCodeEnum;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.exception.BusinessException;
@@ -85,38 +84,33 @@ public class ABaseAdminController {
     }
 
     protected void saveToken2Cookie(HttpServletResponse response, String token) {
-        Cookie cookie = new Cookie(Constants.TOKEN_WEB, token);
+        Cookie cookie = new Cookie(Constants.TOKEN_ADMIN, token);
         cookie.setMaxAge(Constants.TIME_SECONDS_ONE_DAY * 30);
         cookie.setPath("/");
         response.addCookie(cookie);
     }
 
-    protected TokenUserInfoDto getTokenUserInfoDto() {
+
+    protected String getTokenUserInfoDto() {
+    // 从请求上下文中获取HttpServletRequest对象
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String token = request.getHeader(Constants.TOKEN_WEB);
+    // 首先尝试从请求头中获取token
+        String token = request.getHeader(Constants.TOKEN_ADMIN);
+    // 如果请求头中没有token，尝试从cookie中获取
         if (token == null) {
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
+            // 遍历所有cookie，查找名为Constants.TOKEN_ADMIN的cookie
                 for (Cookie cookie : cookies) {
-                    if (Constants.TOKEN_WEB.equals(cookie.getName())) {
+                    if (Constants.TOKEN_ADMIN.equals(cookie.getName())) {
                         token = cookie.getValue();
                         break;
                     }
                 }
             }
         }
-        return token != null ? redisComponent.getTokenUserInfo(token) : null;
-    }
-
-    protected TokenUserInfoDto getTokenUserInfoDtoAdmin() {
-        TokenUserInfoDto dto = getTokenUserInfoDto();
-        if (dto == null) {
-            throw new BusinessException("请先登录");
-        }
-        if (!Constants.isAdmin(dto.getUserId())) {
-            throw new BusinessException("无管理员权限");
-        }
-        return dto;
+    // 如果获取到token，则从redis中获取对应的用户信息，否则返回null
+        return token != null ? redisComponent.getAdminTokenUserInfo(token) : null;
     }
 
     protected void removeTokenFromCookie(HttpServletResponse response) {
@@ -124,8 +118,8 @@ public class ABaseAdminController {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (Constants.TOKEN_WEB.equals(cookie.getName())) {
-                    redisComponent.cleanTokenInfo(cookie.getValue());
+                if (Constants.TOKEN_ADMIN.equals(cookie.getName())) {
+                    redisComponent.cleanAdminTokenInfo(cookie.getValue());
                     cookie.setMaxAge(0);
                     cookie.setPath("/");
                     response.addCookie(cookie);

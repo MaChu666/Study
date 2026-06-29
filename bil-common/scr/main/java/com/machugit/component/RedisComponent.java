@@ -41,11 +41,28 @@ public class RedisComponent {
 
     //清除token
     public void cleanTokenInfo(String token){
+
         redisUtils.delete(Constants.REDIS_KEY_TOKEN_WEB+token);
     }
 
     public TokenUserInfoDto getTokenUserInfo(String token){
         return (TokenUserInfoDto) redisUtils.get(Constants.REDIS_KEY_TOKEN_WEB+token);
+    }
+
+    //保存管理员token
+    public String saveAdminTokenInfo(String account){
+        String token = UUID.randomUUID().toString();
+        redisUtils.setex(Constants.REDIS_KEY_TOKEN_ADMIN+token,account,Constants.REDIS_KEY_EXPIRE_TIME_ONE_DAY);
+        return token;
+    }
+
+    //清除管理员token
+    public void cleanAdminTokenInfo(String token){
+        redisUtils.delete(Constants.REDIS_KEY_TOKEN_ADMIN+token);
+    }
+
+    public String getAdminTokenUserInfo(String token){
+        return (String) redisUtils.get(Constants.REDIS_KEY_TOKEN_ADMIN+token);
     }
 
 }

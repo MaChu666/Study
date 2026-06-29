@@ -1,0 +1,15 @@
+:root {
+  --admin-primary: #409eff;
+  --admin-primary-dark: #337ecc;
+  --admin-success: #67c23a;
+  --admin-warning: #e6a23c;
+  --admin-danger: #f56c6c;
+  --admin-bg: #f2f3f5;
+  --admin-surface: #ffffff;
+  --admin-text: #303133;
+  --admin-text-secondary: #909399;
+  --admin-border: #e4e7ed;
+  --admin-sidebar-bg: #1d1e2c;
+  --admin-sidebar-text: #a6a7b3;
+  --admin-sidebar-active: #ffffff;
+}
