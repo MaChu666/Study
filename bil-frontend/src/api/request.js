@@ -11,6 +11,9 @@ const service = axios.create({
   withCredentials: true
 })
 
+// Network errors that are worth retrying (backend starting up, transient issues)
+const RETRYABLE_CODES = ['EACCES', 'ECONNREFUSED', 'ECONNRESET', 'ERR_NETWORK', 'ERR_CONNECTION_REFUSED', 'ETIMEDOUT']
+
 function isPlainObject(value) {
   return Object.prototype.toString.call(value) === '[object Object]'
 }
@@ -60,11 +63,21 @@ service.interceptors.response.use(
       }
       eventBus.emit('auth:required')
     }
-    ElMessage.error(payload.info || '请求失败')
+    if (!response.config?.silent) {
+      ElMessage.error(payload.info || '请求失败')
+    }
     return Promise.reject(new Error(payload.info || '请求失败'))
   },
-  (error) => {
-    // 请求被取消（快速切换等）
+  async (error) => {
+    const config = error.config || {}
+
+    // Auto-retry once for transient network errors (backend startup, etc.)
+    if (!config._retried && RETRYABLE_CODES.includes(error.code)) {
+      config._retried = true
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return service(config)
+    }
+
     if (error.code === 'ERR_CANCELED' || error.name === 'CanceledError' || error.name === 'AbortError') {
       ElMessage.warning('您切换的太快了！')
       return Promise.reject(error)
@@ -73,7 +86,9 @@ service.interceptors.response.use(
       clearToken()
       eventBus.emit('auth:required')
     }
-    ElMessage.error(error.message || '网络异常')
+    if (!config.silent) {
+      ElMessage.error(error.message || '网络异常')
+    }
     return Promise.reject(error)
   }
 )

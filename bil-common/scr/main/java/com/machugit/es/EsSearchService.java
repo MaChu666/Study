@@ -23,21 +23,26 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 public class EsSearchService {
 
     private static final Logger logger = LoggerFactory.getLogger(EsSearchService.class);
-
     private static final String VIDEO_INDEX = "bil_video";
     private static final String USER_INDEX = "bil_user";
+    private static final long ES_TIMEOUT_MS = 4000;
 
     @Resource
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
+
+    @Resource(name = "esExecutor")
+    private Executor esExecutor;
 
     private volatile boolean esAvailable = true;
 
@@ -46,59 +51,47 @@ public class EsSearchService {
     public List<VideoDoc> searchVideo(String keyword, int from, int size) {
         if (!esAvailable) return Collections.emptyList();
         try {
-            BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
-                    .should(QueryBuilders.matchQuery("videoName", keyword).boost(3.0f))
-                    .should(QueryBuilders.matchQuery("tags", keyword).boost(2.0f))
-                    .should(QueryBuilders.matchQuery("introduction", keyword).boost(1.0f))
-                    .should(QueryBuilders.fuzzyQuery("videoName", keyword).boost(1.5f))
-                    .minimumShouldMatch(1)
-                    .must(QueryBuilders.termQuery("status", 1))
-                    .must(QueryBuilders.termQuery("isDeleted", 0));
-
-            NativeSearchQuery query = new NativeSearchQueryBuilder()
-                    .withQuery(boolQuery)
-                    .withSorts(SortBuilders.scoreSort().order(SortOrder.DESC),
-                               SortBuilders.fieldSort("playCount").order(SortOrder.DESC))
-                    .withPageable(PageRequest.of(from / size, size))
-                    .build();
-
-            SearchHits<VideoDoc> hits = elasticsearchRestTemplate.search(query, VideoDoc.class,
-                    IndexCoordinates.of(VIDEO_INDEX));
-            esAvailable = true;
-            return hits.getSearchHits().stream()
-                    .map(SearchHit::getContent)
-                    .collect(Collectors.toList());
+            return CompletableFuture
+                    .supplyAsync(() -> doSearchVideo(keyword, from, size), esExecutor)
+                    .get(ES_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            logger.warn("ES searchVideo failed, falling back to MySQL: {}", e.getMessage());
+            logger.warn("ES searchVideo failed, fallback to MySQL: {}", e.getMessage());
             esAvailable = false;
             return Collections.emptyList();
         }
     }
 
+    private List<VideoDoc> doSearchVideo(String keyword, int from, int size) {
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.matchQuery("videoName", keyword).boost(3.0f))
+                .should(QueryBuilders.matchQuery("tags", keyword).boost(2.0f))
+                .should(QueryBuilders.matchQuery("introduction", keyword).boost(1.0f))
+                .should(QueryBuilders.fuzzyQuery("videoName", keyword).boost(1.5f))
+                .minimumShouldMatch(1)
+                .must(QueryBuilders.termQuery("status", 1))
+                .must(QueryBuilders.termQuery("isDeleted", 0));
+
+        NativeSearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(boolQuery)
+                .withSorts(SortBuilders.scoreSort().order(SortOrder.DESC),
+                           SortBuilders.fieldSort("playCount").order(SortOrder.DESC))
+                .withPageable(PageRequest.of(from / size, size))
+                .build();
+
+        SearchHits<VideoDoc> hits = elasticsearchRestTemplate.search(query, VideoDoc.class,
+                IndexCoordinates.of(VIDEO_INDEX));
+        esAvailable = true;
+        return hits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .collect(Collectors.toList());
+    }
+
     public List<String> suggestVideo(String keyword, int size) {
         if (!esAvailable) return Collections.emptyList();
         try {
-            BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
-                    .should(QueryBuilders.matchPhrasePrefixQuery("videoName", keyword).boost(3.0f))
-                    .should(QueryBuilders.matchQuery("videoName", keyword).boost(2.0f))
-                    .minimumShouldMatch(1)
-                    .must(QueryBuilders.termQuery("status", 1))
-                    .must(QueryBuilders.termQuery("isDeleted", 0));
-
-            NativeSearchQuery query = new NativeSearchQueryBuilder()
-                    .withQuery(boolQuery)
-                    .withSorts(SortBuilders.scoreSort().order(SortOrder.DESC))
-                    .withPageable(PageRequest.of(0, size))
-                    .build();
-
-            SearchHits<VideoDoc> hits = elasticsearchRestTemplate.search(query, VideoDoc.class,
-                    IndexCoordinates.of(VIDEO_INDEX));
-            esAvailable = true;
-            return hits.getSearchHits().stream()
-                    .map(h -> h.getContent().getVideoName())
-                    .distinct()
-                    .limit(size)
-                    .collect(Collectors.toList());
+            return CompletableFuture
+                    .supplyAsync(() -> doSuggestVideo(keyword, size), esExecutor)
+                    .get(ES_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             logger.warn("ES suggestVideo failed: {}", e.getMessage());
             esAvailable = false;
@@ -106,30 +99,38 @@ public class EsSearchService {
         }
     }
 
+    private List<String> doSuggestVideo(String keyword, int size) {
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.matchPhrasePrefixQuery("videoName", keyword).boost(3.0f))
+                .should(QueryBuilders.matchQuery("videoName", keyword).boost(2.0f))
+                .minimumShouldMatch(1)
+                .must(QueryBuilders.termQuery("status", 1))
+                .must(QueryBuilders.termQuery("isDeleted", 0));
+
+        NativeSearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(boolQuery)
+                .withSorts(SortBuilders.scoreSort().order(SortOrder.DESC))
+                .withPageable(PageRequest.of(0, size))
+                .build();
+
+        SearchHits<VideoDoc> hits = elasticsearchRestTemplate.search(query, VideoDoc.class,
+                IndexCoordinates.of(VIDEO_INDEX));
+        esAvailable = true;
+        return hits.getSearchHits().stream()
+                .map(h -> h.getContent().getVideoName())
+                .distinct()
+                .limit(size)
+                .collect(Collectors.toList());
+    }
+
     // ==================== User Search ====================
 
     public List<UserDoc> searchUser(String keyword, int from, int size) {
         if (!esAvailable) return Collections.emptyList();
         try {
-            BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
-                    .should(QueryBuilders.matchQuery("useName", keyword).boost(3.0f))
-                    .should(QueryBuilders.matchQuery("personProfile", keyword).boost(1.0f))
-                    .should(QueryBuilders.matchQuery("school", keyword).boost(1.5f))
-                    .should(QueryBuilders.fuzzyQuery("useName", keyword).boost(1.5f))
-                    .minimumShouldMatch(1);
-
-            NativeSearchQuery query = new NativeSearchQueryBuilder()
-                    .withQuery(boolQuery)
-                    .withSorts(SortBuilders.scoreSort().order(SortOrder.DESC))
-                    .withPageable(PageRequest.of(from / size, size))
-                    .build();
-
-            SearchHits<UserDoc> hits = elasticsearchRestTemplate.search(query, UserDoc.class,
-                    IndexCoordinates.of(USER_INDEX));
-            esAvailable = true;
-            return hits.getSearchHits().stream()
-                    .map(SearchHit::getContent)
-                    .collect(Collectors.toList());
+            return CompletableFuture
+                    .supplyAsync(() -> doSearchUser(keyword, from, size), esExecutor)
+                    .get(ES_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             logger.warn("ES searchUser failed: {}", e.getMessage());
             esAvailable = false;
@@ -137,9 +138,31 @@ public class EsSearchService {
         }
     }
 
-    // ==================== Indexing ====================
+    private List<UserDoc> doSearchUser(String keyword, int from, int size) {
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.matchQuery("useName", keyword).boost(3.0f))
+                .should(QueryBuilders.matchQuery("personProfile", keyword).boost(1.0f))
+                .should(QueryBuilders.matchQuery("school", keyword).boost(1.5f))
+                .should(QueryBuilders.fuzzyQuery("useName", keyword).boost(1.5f))
+                .minimumShouldMatch(1);
 
-    @Async
+        NativeSearchQuery query = new NativeSearchQueryBuilder()
+                .withQuery(boolQuery)
+                .withSorts(SortBuilders.scoreSort().order(SortOrder.DESC))
+                .withPageable(PageRequest.of(from / size, size))
+                .build();
+
+        SearchHits<UserDoc> hits = elasticsearchRestTemplate.search(query, UserDoc.class,
+                IndexCoordinates.of(USER_INDEX));
+        esAvailable = true;
+        return hits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .collect(Collectors.toList());
+    }
+
+    // ==================== Indexing (async, on ES pool) ====================
+
+    @Async("esExecutor")
     public void indexVideo(VideoInfo video) {
         if (!esAvailable || video == null || video.getVideoId() == null) return;
         try {
@@ -151,13 +174,12 @@ public class EsSearchService {
                     .withObject(doc)
                     .build();
             elasticsearchRestTemplate.index(indexQuery, IndexCoordinates.of(VIDEO_INDEX));
-            logger.debug("Indexed video: {}", video.getVideoId());
         } catch (Exception e) {
             logger.warn("Failed to index video {}: {}", video.getVideoId(), e.getMessage());
         }
     }
 
-    @Async
+    @Async("esExecutor")
     public void indexUser(UserInfo user) {
         if (!esAvailable || user == null || user.getUserId() == null) return;
         try {
@@ -167,7 +189,6 @@ public class EsSearchService {
                     .withObject(doc)
                     .build();
             elasticsearchRestTemplate.index(indexQuery, IndexCoordinates.of(USER_INDEX));
-            logger.debug("Indexed user: {}", user.getUserId());
         } catch (Exception e) {
             logger.warn("Failed to index user {}: {}", user.getUserId(), e.getMessage());
         }

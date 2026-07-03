@@ -39,7 +39,10 @@ import { preUploadVideoApi } from '@/api/modules/file'
 
 const emit = defineEmits(['uploaded', 'removed'])
 
-const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB per chunk
+const CHUNK_SIZE = 10 * 1024 * 1024   // 10MB per chunk
+const MAX_CONCURRENT = 2               // parallel chunk uploads
+const MAX_RETRIES = 3
+const RETRY_DELAY_MS = 2000
 
 const uploadRef = ref(null)
 const uploading = ref(false)
@@ -59,6 +62,28 @@ function formatSize(bytes) {
 
 const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024 // 2GB
 
+async function uploadChunk(blob, index, chunks, uploadId) {
+  let lastError = null
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const formData = new FormData()
+      formData.append('chunkFile', blob, 'chunk_' + index)
+      formData.append('chunkIndex', String(index))
+      formData.append('uploadId', uploadId)
+      await request.post('/file/uploadVideo', formData, { timeout: 240000, silent: true })
+      console.log(`[Upload] Chunk ${index + 1}/${chunks} OK` + (attempt > 0 ? ` (retry ${attempt})` : ''))
+      return
+    } catch (e) {
+      lastError = e
+      console.warn(`[Upload] Chunk ${index + 1}/${chunks} attempt ${attempt + 1}/${MAX_RETRIES} failed:`, e.message || e)
+      if (attempt < MAX_RETRIES - 1) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS))
+      }
+    }
+  }
+  throw new Error(`分片 ${index + 1}/${chunks} 上传失败（已重试${MAX_RETRIES}次）: ` + (lastError?.message || '连接被拒绝'))
+}
+
 async function handleFileChange(file) {
   const raw = file.raw
   if (!raw) return
@@ -76,26 +101,38 @@ async function handleFileChange(file) {
 
   try {
     const chunks = Math.ceil(raw.size / CHUNK_SIZE)
+    console.log(`[Upload] Starting: ${raw.name}, ${formatSize(raw.size)}, ${chunks} chunks, ${MAX_CONCURRENT} concurrent`)
     const { fileId, uploadId } = await preUploadVideoApi({
       fileName: raw.name,
       chunks: String(chunks)
     })
+    console.log(`[Upload] PreUpload OK, uploadId=${uploadId}, fileId=${fileId}`)
+
+    let completed = 0
+    const tasks = []
 
     for (let i = 0; i < chunks; i++) {
       const start = i * CHUNK_SIZE
       const end = Math.min(start + CHUNK_SIZE, raw.size)
       const blob = raw.slice(start, end)
 
-      const formData = new FormData()
-      formData.append('chunkFile', blob, 'chunk_' + i)
-      formData.append('chunkIndex', String(i))
-      formData.append('uploadId', uploadId)
-      await request.post('/file/uploadVideo', formData, { timeout: 120000 })
+      const task = uploadChunk(blob, i, chunks, uploadId).then(() => {
+        completed++
+        progress.value = Math.round((completed / chunks) * 100)
+      })
 
-      progress.value = Math.round(((i + 1) / chunks) * 100)
+      tasks.push(task)
+
+      // Send up to MAX_CONCURRENT in parallel, then await one before adding next
+      if (tasks.length >= MAX_CONCURRENT) {
+        await Promise.race(tasks.splice(0, MAX_CONCURRENT))
+      }
     }
 
-    await request.post('/file/completeUpload', { uploadId, fileId }, { timeout: 600000 })
+    // Wait for remaining tasks
+    await Promise.all(tasks)
+
+    await request.post('/file/completeUpload', { uploadId, fileId }, { timeout: 600000, silent: true })
 
     uploadedFileId.value = fileId
     ElMessage.success('视频上传完成，正在转码...')
@@ -107,6 +144,7 @@ async function handleFileChange(file) {
     const msg = e?.message || e?.response?.data?.info || '上传失败'
     uploadError.value = msg
     ElMessage.error(msg)
+    console.error('[Upload] Failed:', msg)
     ignoreRemove = true
     uploadRef.value?.clearFiles()
     ignoreRemove = false
