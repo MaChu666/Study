@@ -36,6 +36,12 @@ spring:
         max-idle: 10
         min-idle: 0
     timeout: 2000
+
+
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 3s
+    socket-timeout: 5s
 #mybatis 婵犮垹鐖㈤崘顏呯槗闂佸憡鍔栭悷銊ッ归崱妯镐粴闁绘挸楠稿Σ?
 mybatis:
   configuration:

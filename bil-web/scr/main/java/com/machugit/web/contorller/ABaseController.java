@@ -21,7 +21,7 @@ public class ABaseController {
     protected static final String STATUC_ERROR = "error";
 
     @Resource
-    private RedisComponent redisComponent;
+    protected RedisComponent redisComponent;
 
     protected <T> ResponseVO getSuccessResponseVO(T t) {
         ResponseVO<T> responseVO = new ResponseVO<>();
