@@ -62,7 +62,7 @@ public class EsSearchService {
         SearchHits<VideoDoc> hits = elasticsearchRestTemplate.search(query, VideoDoc.class,
                 IndexCoordinates.of(VIDEO_INDEX));
         return hits.getSearchHits().stream()
-                .map(h -> h.getContent())
+                .map(org.springframework.data.elasticsearch.core.SearchHit::getContent)
                 .collect(Collectors.toList());
     }
 
@@ -114,7 +114,7 @@ public class EsSearchService {
         SearchHits<UserDoc> hits = elasticsearchRestTemplate.search(query, UserDoc.class,
                 IndexCoordinates.of(USER_INDEX));
         return hits.getSearchHits().stream()
-                .map(h -> h.getContent())
+                .map(org.springframework.data.elasticsearch.core.SearchHit::getContent)
                 .collect(Collectors.toList());
     }
 
@@ -128,7 +128,7 @@ public class EsSearchService {
         if (video == null || video.getVideoId() == null) return;
         try {
             VideoDoc doc = VideoDoc.from(video);
-            if (video.getUseName() != null) doc.setUserName(video.getUseName());
+            if (video.getUserName() != null) doc.setUserName(video.getUserName());
             if (video.getUserAvatar() != null) doc.setUserAvatar(video.getUserAvatar());
             IndexQuery indexQuery = new IndexQueryBuilder()
                     .withId(doc.getVideoId())

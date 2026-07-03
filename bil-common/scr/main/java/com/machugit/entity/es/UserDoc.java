@@ -13,10 +13,10 @@ public class UserDoc {
     @Id
     private String userId;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String useName;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String personProfile;
 
     @Field(type = FieldType.Keyword)

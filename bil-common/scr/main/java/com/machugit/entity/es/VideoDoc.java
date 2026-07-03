@@ -13,10 +13,10 @@ public class VideoDoc {
     @Id
     private String videoId;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String videoName;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String tags;
 
     @Field(type = FieldType.Keyword)
@@ -28,7 +28,7 @@ public class VideoDoc {
     @Field(type = FieldType.Keyword)
     private Integer pCategoryId;
 
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    @Field(type = FieldType.Text, analyzer = "standard")
     private String introduction;
 
     @Field(type = FieldType.Keyword)

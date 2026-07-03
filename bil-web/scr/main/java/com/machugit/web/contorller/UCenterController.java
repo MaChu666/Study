@@ -1,4 +1,4 @@
-﻿package com.machugit.web.contorller;
+package com.machugit.web.contorller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +68,7 @@ public class UCenterController extends ABaseController {
         }
         videoInfoService.postVideo(videoInfo, fileList);
         // 同期到 Elasticsearch
-        esSearchService.indexVideo(bean);
+        esSearchService.indexVideo(videoInfo);
         return getSuccessResponseVO(videoInfo);
     }
 

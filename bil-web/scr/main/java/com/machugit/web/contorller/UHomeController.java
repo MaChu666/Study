@@ -1,4 +1,4 @@
-﻿package com.machugit.web.contorller;
+package com.machugit.web.contorller;
 
 import java.util.HashMap;
 import java.util.List;

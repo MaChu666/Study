@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.UserActionMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.UserAction">
+		<!--行为id-->
+		<result column="action_id" property="actionId"  />
+		<!--视频id-->
+		<result column="video_id" property="videoId"  />
+		<!--用户id-->
+		<result column="user_id" property="userId"  />
+		<!--行为类型-->
+		<result column="action_type" property="actionType"  />
+		<!--投币数量-->
+		<result column="coin_count" property="coinCount"  />
+		<!--行为次数-->
+		<result column="action_count" property="actionCount"  />
+		<!--评论id-->
+		<result column="comment_id" property="commentId"  />
+		<!--是否取消-->
+		<result column="is_cancel" property="isCancel"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 a.action_id,a.video_id,a.user_id,a.action_type,a.coin_count,a.action_count,
+		 a.comment_id,a.is_cancel,a.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.actionId != null">
+				 and  a.action_id = #{query.actionId}
+			</if>
+			<if test="query.videoId != null and query.videoId!=''">
+				 and  a.video_id = #{query.videoId}
+			</if>
+			<if test="query.userId != null and query.userId!=''">
+				 and  a.user_id = #{query.userId}
+			</if>
+			<if test="query.actionType != null">
+				 and  a.action_type = #{query.actionType}
+			</if>
+			<if test="query.coinCount != null">
+				 and  a.coin_count = #{query.coinCount}
+			</if>
+			<if test="query.actionCount != null">
+				 and  a.action_count = #{query.actionCount}
+			</if>
+			<if test="query.commentId != null">
+				 and  a.comment_id = #{query.commentId}
+			</if>
+			<if test="query.isCancel != null">
+				 and  a.is_cancel = #{query.isCancel}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  a.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  a.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  a.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM user_action a <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM user_action a <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.UserAction">
+		 INSERT INTO user_action
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.actionId != null">
+				 action_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.actionType != null">
+				 action_type,
+			</if>
+			<if test="bean.coinCount != null">
+				 coin_count,
+			</if>
+			<if test="bean.actionCount != null">
+				 action_count,
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.isCancel != null">
+				 is_cancel,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.actionId!=null">
+				 #{bean.actionId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.actionType!=null">
+				 #{bean.actionType},
+			</if>
+			<if test="bean.coinCount!=null">
+				 #{bean.coinCount},
+			</if>
+			<if test="bean.actionCount!=null">
+				 #{bean.actionCount},
+			</if>
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.isCancel!=null">
+				 #{bean.isCancel},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.UserAction">
+		 INSERT INTO user_action
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.actionId != null">
+				 action_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.actionType != null">
+				 action_type,
+			</if>
+			<if test="bean.coinCount != null">
+				 coin_count,
+			</if>
+			<if test="bean.actionCount != null">
+				 action_count,
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.isCancel != null">
+				 is_cancel,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.actionId!=null">
+				 #{bean.actionId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.actionType!=null">
+				 #{bean.actionType},
+			</if>
+			<if test="bean.coinCount!=null">
+				 #{bean.coinCount},
+			</if>
+			<if test="bean.actionCount!=null">
+				 #{bean.actionCount},
+			</if>
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.isCancel!=null">
+				 #{bean.isCancel},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.actionId!=null">
+				 action_id = VALUES(action_id),
+			</if>
+			<if test="bean.videoId!=null">
+				 video_id = VALUES(video_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.actionType!=null">
+				 action_type = VALUES(action_type),
+			</if>
+			<if test="bean.coinCount!=null">
+				 coin_count = VALUES(coin_count),
+			</if>
+			<if test="bean.actionCount!=null">
+				 action_count = VALUES(action_count),
+			</if>
+			<if test="bean.commentId!=null">
+				 comment_id = VALUES(comment_id),
+			</if>
+			<if test="bean.isCancel!=null">
+				 is_cancel = VALUES(is_cancel),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.UserAction">
+		 INSERT INTO user_action(
+			 action_id,
+			 video_id,
+			 user_id,
+			 action_type,
+			 coin_count,
+			 action_count,
+			 comment_id,
+			 is_cancel,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.actionId},
+				 #{item.videoId},
+				 #{item.userId},
+				 #{item.actionType},
+				 #{item.coinCount},
+				 #{item.actionCount},
+				 #{item.commentId},
+				 #{item.isCancel},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.UserAction">
+		 INSERT INTO user_action(
+			 action_id,
+			 video_id,
+			 user_id,
+			 action_type,
+			 coin_count,
+			 action_count,
+			 comment_id,
+			 is_cancel,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.actionId},
+				 #{item.videoId},
+				 #{item.userId},
+				 #{item.actionType},
+				 #{item.coinCount},
+				 #{item.actionCount},
+				 #{item.commentId},
+				 #{item.isCancel},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			action_id = VALUES(action_id),
+			video_id = VALUES(video_id),
+			user_id = VALUES(user_id),
+			action_type = VALUES(action_type),
+			coin_count = VALUES(coin_count),
+			action_count = VALUES(action_count),
+			comment_id = VALUES(comment_id),
+			is_cancel = VALUES(is_cancel),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.UserActionQuery">
+		 UPDATE user_action a
+ 		 <set>
+			<if test="bean.actionId != null">
+				 action_id = #{bean.actionId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.actionType != null">
+				 action_type = #{bean.actionType},
+			</if>
+			<if test="bean.coinCount != null">
+				 coin_count = #{bean.coinCount},
+			</if>
+			<if test="bean.actionCount != null">
+				 action_count = #{bean.actionCount},
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id = #{bean.commentId},
+			</if>
+			<if test="bean.isCancel != null">
+				 is_cancel = #{bean.isCancel},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete a from user_action a
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据ActionId修改-->
+	<update id="updateByActionId" parameterType="com.machugit.entity.po.UserAction">
+		 UPDATE user_action
+ 		 <set>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.actionType != null">
+				 action_type = #{bean.actionType},
+			</if>
+			<if test="bean.coinCount != null">
+				 coin_count = #{bean.coinCount},
+			</if>
+			<if test="bean.actionCount != null">
+				 action_count = #{bean.actionCount},
+			</if>
+			<if test="bean.commentId != null">
+				 comment_id = #{bean.commentId},
+			</if>
+			<if test="bean.isCancel != null">
+				 is_cancel = #{bean.isCancel},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where action_id=#{actionId}
+	</update>
+
+	<!-- 根据ActionId删除-->
+	<delete id="deleteByActionId">
+		delete from user_action where action_id=#{actionId}
+	</delete>
+
+	<!-- 根据ActionId获取对象-->
+	<select id="selectByActionId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user_action a where action_id=#{actionId}
+	</select>
+
+	<!-- 根据VideoId获取对象-->
+	<select id="selectByVideoId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user_action a where video_id=#{videoId}
+	</select>
+
+	<!-- 根据UserId获取对象-->
+	<select id="selectByUserId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user_action a where user_id=#{userId}
+	</select>
+
+</mapper>

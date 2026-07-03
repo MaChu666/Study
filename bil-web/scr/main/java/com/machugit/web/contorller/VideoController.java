@@ -1,4 +1,4 @@
-﻿package com.machugit.web.contorller;
+package com.machugit.web.contorller;
 
 import java.util.List;
 
@@ -114,7 +114,8 @@ public class VideoController extends ABaseController {
         List<String> suggestions = esSearchService.suggestVideo(keyword, 10);
         return getSuccessResponseVO(suggestions);
     }
-
+    /**
+     /**
      * 获取搜索关键词排行
      */
     @RequestMapping("/getSearchKeywordTop")

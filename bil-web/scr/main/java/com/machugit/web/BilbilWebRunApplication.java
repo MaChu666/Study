@@ -1,4 +1,4 @@
-﻿package com.machugit.web;
+package com.machugit.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

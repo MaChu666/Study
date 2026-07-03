@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.BannerConfigMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.BannerConfig">
+		<!--轮播图id-->
+		<result column="banner_id" property="bannerId"  />
+		<!--标题-->
+		<result column="title" property="title"  />
+		<!--图片地址-->
+		<result column="image_url" property="imageUrl"  />
+		<!--跳转类型-->
+		<result column="link_type" property="linkType"  />
+		<!--跳转值-->
+		<result column="link_value" property="linkValue"  />
+		<!--排序-->
+		<result column="sort" property="sort"  />
+		<!--状态-->
+		<result column="status" property="status"  />
+		<!--开始时间-->
+		<result column="start_time" property="startTime"  />
+		<!--结束时间-->
+		<result column="end_time" property="endTime"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+		<!--更新时间-->
+		<result column="update_time" property="updateTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 b.banner_id,b.title,b.image_url,b.link_type,b.link_value,
+		 b.sort,b.status,b.start_time,b.end_time,b.create_time,
+		 b.update_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.bannerId != null">
+				 and  b.banner_id = #{query.bannerId}
+			</if>
+			<if test="query.title != null and query.title!=''">
+				 and  b.title = #{query.title}
+			</if>
+			<if test="query.imageUrl != null and query.imageUrl!=''">
+				 and  b.image_url = #{query.imageUrl}
+			</if>
+			<if test="query.linkType != null">
+				 and  b.link_type = #{query.linkType}
+			</if>
+			<if test="query.linkValue != null and query.linkValue!=''">
+				 and  b.link_value = #{query.linkValue}
+			</if>
+			<if test="query.sort != null">
+				 and  b.sort = #{query.sort}
+			</if>
+			<if test="query.status != null">
+				 and  b.status = #{query.status}
+			</if>
+			<if test="query.startTime != null and query.startTime!=''">
+				 <![CDATA[ and  b.start_time=str_to_date(#{query.startTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.endTime != null and query.endTime!=''">
+				 <![CDATA[ and  b.end_time=str_to_date(#{query.endTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  b.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTime != null and query.updateTime!=''">
+				 <![CDATA[ and  b.update_time=str_to_date(#{query.updateTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.titleFuzzy!= null  and query.titleFuzzy!=''">
+				 and  b.title like concat('%', #{query.titleFuzzy}, '%')
+			</if>
+			<if test="query.imageUrlFuzzy!= null  and query.imageUrlFuzzy!=''">
+				 and  b.image_url like concat('%', #{query.imageUrlFuzzy}, '%')
+			</if>
+			<if test="query.linkValueFuzzy!= null  and query.linkValueFuzzy!=''">
+				 and  b.link_value like concat('%', #{query.linkValueFuzzy}, '%')
+			</if>
+			<if test="query.startTimeStart!= null and query.startTimeStart!=''">
+				 <![CDATA[ and  b.start_time>=str_to_date(#{query.startTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.startTimeEnd!= null and query.startTimeEnd!=''">
+				 <![CDATA[ and  b.start_time< date_sub(str_to_date(#{query.startTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.endTimeStart!= null and query.endTimeStart!=''">
+				 <![CDATA[ and  b.end_time>=str_to_date(#{query.endTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.endTimeEnd!= null and query.endTimeEnd!=''">
+				 <![CDATA[ and  b.end_time< date_sub(str_to_date(#{query.endTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  b.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  b.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.updateTimeStart!= null and query.updateTimeStart!=''">
+				 <![CDATA[ and  b.update_time>=str_to_date(#{query.updateTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTimeEnd!= null and query.updateTimeEnd!=''">
+				 <![CDATA[ and  b.update_time< date_sub(str_to_date(#{query.updateTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM banner_config b <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM banner_config b <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.BannerConfig">
+		 INSERT INTO banner_config
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.bannerId != null">
+				 banner_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.imageUrl != null">
+				 image_url,
+			</if>
+			<if test="bean.linkType != null">
+				 link_type,
+			</if>
+			<if test="bean.linkValue != null">
+				 link_value,
+			</if>
+			<if test="bean.sort != null">
+				 sort,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.startTime != null">
+				 start_time,
+			</if>
+			<if test="bean.endTime != null">
+				 end_time,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.bannerId!=null">
+				 #{bean.bannerId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.imageUrl!=null">
+				 #{bean.imageUrl},
+			</if>
+			<if test="bean.linkType!=null">
+				 #{bean.linkType},
+			</if>
+			<if test="bean.linkValue!=null">
+				 #{bean.linkValue},
+			</if>
+			<if test="bean.sort!=null">
+				 #{bean.sort},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.startTime!=null">
+				 #{bean.startTime},
+			</if>
+			<if test="bean.endTime!=null">
+				 #{bean.endTime},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.BannerConfig">
+		 INSERT INTO banner_config
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.bannerId != null">
+				 banner_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.imageUrl != null">
+				 image_url,
+			</if>
+			<if test="bean.linkType != null">
+				 link_type,
+			</if>
+			<if test="bean.linkValue != null">
+				 link_value,
+			</if>
+			<if test="bean.sort != null">
+				 sort,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.startTime != null">
+				 start_time,
+			</if>
+			<if test="bean.endTime != null">
+				 end_time,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.bannerId!=null">
+				 #{bean.bannerId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.imageUrl!=null">
+				 #{bean.imageUrl},
+			</if>
+			<if test="bean.linkType!=null">
+				 #{bean.linkType},
+			</if>
+			<if test="bean.linkValue!=null">
+				 #{bean.linkValue},
+			</if>
+			<if test="bean.sort!=null">
+				 #{bean.sort},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.startTime!=null">
+				 #{bean.startTime},
+			</if>
+			<if test="bean.endTime!=null">
+				 #{bean.endTime},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.bannerId!=null">
+				 banner_id = VALUES(banner_id),
+			</if>
+			<if test="bean.title!=null">
+				 title = VALUES(title),
+			</if>
+			<if test="bean.imageUrl!=null">
+				 image_url = VALUES(image_url),
+			</if>
+			<if test="bean.linkType!=null">
+				 link_type = VALUES(link_type),
+			</if>
+			<if test="bean.linkValue!=null">
+				 link_value = VALUES(link_value),
+			</if>
+			<if test="bean.sort!=null">
+				 sort = VALUES(sort),
+			</if>
+			<if test="bean.status!=null">
+				 status = VALUES(status),
+			</if>
+			<if test="bean.startTime!=null">
+				 start_time = VALUES(start_time),
+			</if>
+			<if test="bean.endTime!=null">
+				 end_time = VALUES(end_time),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+			<if test="bean.updateTime!=null">
+				 update_time = VALUES(update_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.BannerConfig">
+		 INSERT INTO banner_config(
+			 banner_id,
+			 title,
+			 image_url,
+			 link_type,
+			 link_value,
+			 sort,
+			 status,
+			 start_time,
+			 end_time,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.bannerId},
+				 #{item.title},
+				 #{item.imageUrl},
+				 #{item.linkType},
+				 #{item.linkValue},
+				 #{item.sort},
+				 #{item.status},
+				 #{item.startTime},
+				 #{item.endTime},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.BannerConfig">
+		 INSERT INTO banner_config(
+			 banner_id,
+			 title,
+			 image_url,
+			 link_type,
+			 link_value,
+			 sort,
+			 status,
+			 start_time,
+			 end_time,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.bannerId},
+				 #{item.title},
+				 #{item.imageUrl},
+				 #{item.linkType},
+				 #{item.linkValue},
+				 #{item.sort},
+				 #{item.status},
+				 #{item.startTime},
+				 #{item.endTime},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			banner_id = VALUES(banner_id),
+			title = VALUES(title),
+			image_url = VALUES(image_url),
+			link_type = VALUES(link_type),
+			link_value = VALUES(link_value),
+			sort = VALUES(sort),
+			status = VALUES(status),
+			start_time = VALUES(start_time),
+			end_time = VALUES(end_time),
+			create_time = VALUES(create_time),
+			update_time = VALUES(update_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.BannerConfigQuery">
+		 UPDATE banner_config b
+ 		 <set>
+			<if test="bean.bannerId != null">
+				 banner_id = #{bean.bannerId},
+			</if>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.imageUrl != null">
+				 image_url = #{bean.imageUrl},
+			</if>
+			<if test="bean.linkType != null">
+				 link_type = #{bean.linkType},
+			</if>
+			<if test="bean.linkValue != null">
+				 link_value = #{bean.linkValue},
+			</if>
+			<if test="bean.sort != null">
+				 sort = #{bean.sort},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.startTime != null">
+				 start_time = #{bean.startTime},
+			</if>
+			<if test="bean.endTime != null">
+				 end_time = #{bean.endTime},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete b from banner_config b
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据BannerId修改-->
+	<update id="updateByBannerId" parameterType="com.machugit.entity.po.BannerConfig">
+		 UPDATE banner_config
+ 		 <set>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.imageUrl != null">
+				 image_url = #{bean.imageUrl},
+			</if>
+			<if test="bean.linkType != null">
+				 link_type = #{bean.linkType},
+			</if>
+			<if test="bean.linkValue != null">
+				 link_value = #{bean.linkValue},
+			</if>
+			<if test="bean.sort != null">
+				 sort = #{bean.sort},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.startTime != null">
+				 start_time = #{bean.startTime},
+			</if>
+			<if test="bean.endTime != null">
+				 end_time = #{bean.endTime},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 where banner_id=#{bannerId}
+	</update>
+
+	<!-- 根据BannerId删除-->
+	<delete id="deleteByBannerId">
+		delete from banner_config where banner_id=#{bannerId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByBannerId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from banner_config b where banner_id=#{bannerId}
+	</select>
+
+</mapper>

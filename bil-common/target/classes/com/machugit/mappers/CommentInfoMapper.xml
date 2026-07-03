@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.CommentInfoMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.CommentInfo">
+		<!--评论id-->
+		<result column="comment_id" property="commentId"  />
+		<!--视频id-->
+		<result column="video_id" property="videoId"  />
+		<!--用户id-->
+		<result column="user_id" property="userId"  />
+		<!--评论内容-->
+		<result column="content" property="content"  />
+		<!--回复评论id-->
+		<result column="reply_comment_id" property="replyCommentId"  />
+		<result column="root" property="root"  />
+		<!--图片路径-->
+		<result column="img_path" property="imgPath"  />
+		<!--置顶类型-->
+		<result column="top_type" property="topType"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 c.comment_id,c.video_id,c.user_id,c.content,c.reply_comment_id, c.root,
+		 c.img_path,c.top_type,c.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.commentId != null">
+				 and  c.comment_id = #{query.commentId}
+			</if>
+			<if test="query.videoId != null and query.videoId!=''">
+				 and  c.video_id = #{query.videoId}
+			</if>
+			<if test="query.userId != null and query.userId!=''">
+				 and  c.user_id = #{query.userId}
+			</if>
+			<if test="query.content != null and query.content!=''">
+				 and  c.content = #{query.content}
+			</if>
+			<if test="query.replyCommentId != null">
+				 and  c.reply_comment_id = #{query.replyCommentId}
+			</if>
+			<if test="query.root != null">
+				 and  c.root = #{query.root}
+			</if>
+			<if test="query.imgPath != null and query.imgPath!=''">
+				 and  c.img_path = #{query.imgPath}
+			</if>
+			<if test="query.topType != null">
+				 and  c.top_type = #{query.topType}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  c.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+				 and  c.content like concat('%', #{query.contentFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  c.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  c.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM comment_info c <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM comment_info c <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.CommentInfo">
+		 INSERT INTO comment_info
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.replyCommentId != null">
+				 reply_comment_id,
+			</if>
+			<if test="bean.root != null">
+				 root,
+			</if>
+			<if test="bean.imgPath != null">
+				 img_path,
+			</if>
+			<if test="bean.topType != null">
+				 top_type,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.replyCommentId!=null">
+				 #{bean.replyCommentId},
+			</if>
+			<if test="bean.root!=null">
+				 #{bean.root},
+			</if>
+			<if test="bean.imgPath!=null">
+				 #{bean.imgPath},
+			</if>
+			<if test="bean.topType!=null">
+				 #{bean.topType},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.CommentInfo">
+		 INSERT INTO comment_info
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.commentId != null">
+				 comment_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.replyCommentId != null">
+				 reply_comment_id,
+			</if>
+			<if test="bean.root != null">
+				 root,
+			</if>
+			<if test="bean.imgPath != null">
+				 img_path,
+			</if>
+			<if test="bean.topType != null">
+				 top_type,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.commentId!=null">
+				 #{bean.commentId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.replyCommentId!=null">
+				 #{bean.replyCommentId},
+			</if>
+			<if test="bean.root!=null">
+				 #{bean.root},
+			</if>
+			<if test="bean.imgPath!=null">
+				 #{bean.imgPath},
+			</if>
+			<if test="bean.topType!=null">
+				 #{bean.topType},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.commentId!=null">
+				 comment_id = VALUES(comment_id),
+			</if>
+			<if test="bean.videoId!=null">
+				 video_id = VALUES(video_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.content!=null">
+				 content = VALUES(content),
+			</if>
+			<if test="bean.replyCommentId!=null">
+				 reply_comment_id = VALUES(reply_comment_id),
+			</if>
+			<if test="bean.imgPath!=null">
+				 img_path = VALUES(img_path),
+			</if>
+			<if test="bean.topType!=null">
+				 top_type = VALUES(top_type),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.CommentInfo">
+		 INSERT INTO comment_info(
+			 comment_id,
+			 video_id,
+			 user_id,
+			 content,
+			 reply_comment_id,
+			 img_path,
+			 top_type,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.commentId},
+				 #{item.videoId},
+				 #{item.userId},
+				 #{item.content},
+				 #{item.replyCommentId},
+				 #{item.imgPath},
+				 #{item.topType},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.CommentInfo">
+		 INSERT INTO comment_info(
+			 comment_id,
+			 video_id,
+			 user_id,
+			 content,
+			 reply_comment_id,
+			 img_path,
+			 top_type,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.commentId},
+				 #{item.videoId},
+				 #{item.userId},
+				 #{item.content},
+				 #{item.replyCommentId},
+				 #{item.imgPath},
+				 #{item.topType},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			comment_id = VALUES(comment_id),
+			video_id = VALUES(video_id),
+			user_id = VALUES(user_id),
+			content = VALUES(content),
+			reply_comment_id = VALUES(reply_comment_id),
+			img_path = VALUES(img_path),
+			top_type = VALUES(top_type),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.CommentInfoQuery">
+		 UPDATE comment_info c
+ 		 <set>
+			<if test="bean.commentId != null">
+				 comment_id = #{bean.commentId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.replyCommentId != null">
+				 reply_comment_id = #{bean.replyCommentId},
+			</if>
+			<if test="bean.imgPath != null">
+				 img_path = #{bean.imgPath},
+			</if>
+			<if test="bean.topType != null">
+				 top_type = #{bean.topType},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete c from comment_info c
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据CommentId修改-->
+	<update id="updateByCommentId" parameterType="com.machugit.entity.po.CommentInfo">
+		 UPDATE comment_info
+ 		 <set>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.replyCommentId != null">
+				 reply_comment_id = #{bean.replyCommentId},
+			</if>
+			<if test="bean.imgPath != null">
+				 img_path = #{bean.imgPath},
+			</if>
+			<if test="bean.topType != null">
+				 top_type = #{bean.topType},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where comment_id=#{commentId}
+	</update>
+
+	<!-- 根据CommentId删除-->
+	<delete id="deleteByCommentId">
+		delete from comment_info where comment_id=#{commentId}
+	</delete>
+
+	<!-- 根据CommentId获取对象-->
+	<select id="selectByCommentId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from comment_info c where comment_id=#{commentId}
+	</select>
+
+	<!-- 根据VideoId获取对象-->
+	<select id="selectByVideoId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from comment_info c where video_id=#{videoId}
+	</select>
+
+</mapper>
