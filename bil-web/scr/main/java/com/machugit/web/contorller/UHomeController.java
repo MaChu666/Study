@@ -87,7 +87,6 @@ public class UHomeController extends ABaseController {
         videoQuery.setPageNo(1);
         PaginationResultVO<VideoInfo> videoResult = videoInfoService.loadVideoList(videoQuery);
         result.put("videoCount", videoResult.getTotalCount());
-        // TODO: add count methods to service layer for like/comment/danmu
         result.put("likeCount", 0);
         result.put("commentCount", 0);
         result.put("danmuCount", 0);
