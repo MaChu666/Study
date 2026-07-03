@@ -24,11 +24,13 @@ public class AdminVideoController extends ABaseAdminController {
     private VideoInfoServiceImpl videoInfoService;
 
     @RequestMapping("/loadVideoList")
-    public ResponseVO loadVideoList(@NotEmpty String status,
+    public ResponseVO loadVideoList(String status,
                                     @NotEmpty String pageNo,
                                     String videoNameFuzzy) {
         VideoInfoQuery query = new VideoInfoQuery();
-        query.setStatus(Integer.parseInt(status));
+        if (status != null && !status.isEmpty()) {
+            query.setStatus(Integer.parseInt(status));
+        }
         query.setPageNo(Integer.parseInt(pageNo));
         query.setVideoNameFuzzy(videoNameFuzzy);
         query.setOrderBy("create_time desc");

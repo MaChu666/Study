@@ -30,7 +30,11 @@
           <el-input v-model="form.categoryName" placeholder="例: 游戏" />
         </el-form-item>
         <el-form-item label="图标">
-          <el-input v-model="form.icon" placeholder="图标 URL" />
+          <div class="icon-upload-row">
+            <img v-if="form.icon && !iconBroken" :src="form.icon" class="icon-preview" @error="onIconError" />
+            <el-button size="small" @click="showCropper = true">{{ form.icon ? '更换图标' : '上传图标' }}</el-button>
+            <el-button v-if="form.icon" size="small" @click="form.icon = ''">清除</el-button>
+          </div>
         </el-form-item>
         <el-form-item label="背景">
           <el-input v-model="form.background" placeholder="背景 URL 或色值" />
@@ -41,6 +45,8 @@
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <ImageCropperDialog v-model="showCropper" @success="onIconUploaded" />
   </div>
 </template>
 
@@ -48,10 +54,13 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { loadCategoryApi, saveCategoryApi, delCategoryApi } from '@/api/modules/category'
+import ImageCropperDialog from '@/components/ImageCropperDialog.vue'
 
 const categories = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
+const showCropper = ref(false)
+const iconBroken = ref(false)
 const form = reactive({ pCategoryId: 0, categoryId: undefined, categoryCode: '', categoryName: '', icon: '', background: '' })
 let editingParent = null
 
@@ -73,7 +82,8 @@ function openAdd(parent) {
   form.categoryName = ''
   form.icon = ''
   form.background = ''
-  dialogVisible.value = true
+  iconBroken.value = false
+dialogVisible.value = true
 }
 
 function openEdit(row) {
@@ -86,6 +96,15 @@ function openEdit(row) {
   form.icon = row.icon || ''
   form.background = row.background || ''
   dialogVisible.value = true
+}
+
+function onIconError() {
+  iconBroken.value = true
+}
+
+function onIconUploaded(url) {
+  iconBroken.value = false
+  form.icon = url
 }
 
 async function handleSave() {
@@ -109,5 +128,17 @@ onMounted(loadData)
   margin-bottom: 16px;
   display: flex;
   gap: 12px;
+}
+.icon-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.icon-preview {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--el-border-color, #dcdfe6);
 }
 </style>

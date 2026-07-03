@@ -1,4 +1,4 @@
-package com.machugit.web.contorller;
+﻿package com.machugit.web.contorller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +26,8 @@ import com.machugit.entity.vo.PaginationResultVO;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.service.impl.UserCollectionServiceImpl;
 import com.machugit.service.impl.UserFocusServiceImpl;
+import com.machugit.es.EsSearchService;
+import com.machugit.entity.es.UserDoc;
 import com.machugit.service.impl.UserInfoServiceImpl;
 import com.machugit.service.impl.VideoInfoServiceImpl;
 
@@ -35,6 +37,9 @@ import com.machugit.service.impl.VideoInfoServiceImpl;
 public class UHomeController extends ABaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(UHomeController.class);
+
+    @Resource
+    private EsSearchService esSearchService;
 
     @Resource
     private UserInfoServiceImpl userInfoService;
@@ -75,6 +80,9 @@ public class UHomeController extends ABaseController {
             }
         }
         userInfoService.updateUserInfoByUserId(userInfo, tokenUserInfoDto.getUserId());
+        // 同期到 Elasticsearch
+        UserInfo updated = userInfoService.getUserInfoByUserId(tokenUserInfoDto.getUserId());
+        if (updated != null) esSearchService.indexUser(updated);
         return getSuccessResponseVO(null);
     }
 
@@ -245,6 +253,23 @@ public class UHomeController extends ABaseController {
 
     @RequestMapping("/searchUsers")
     public ResponseVO searchUsers(@NotEmpty String keyword) {
+        List<UserDoc> docs = esSearchService.searchUser(keyword, 0, 20);
+        if (docs != null && !docs.isEmpty()) {
+            List<Map<String, Object>> results = new java.util.ArrayList<>();
+            for (UserDoc doc : docs) {
+                Map<String, Object> item = new java.util.HashMap<>();
+                item.put("userId", doc.getUserId());
+                item.put("useName", doc.getUseName());
+                item.put("avatar", doc.getAvatar());
+                item.put("personProfile", doc.getPersonProfile());
+                item.put("school", doc.getSchool());
+                item.put("sex", doc.getSex());
+                item.put("fansCount", doc.getFansCount());
+                item.put("followCount", doc.getFollowCount());
+                results.add(item);
+            }
+            return getSuccessResponseVO(results);
+        }
         return getSuccessResponseVO(userInfoService.searchUsers(keyword));
     }
 }

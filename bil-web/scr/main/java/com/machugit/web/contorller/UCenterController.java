@@ -1,4 +1,4 @@
-package com.machugit.web.contorller;
+﻿package com.machugit.web.contorller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +18,7 @@ import com.machugit.entity.query.VideoInfoQuery;
 import com.machugit.entity.vo.PaginationResultVO;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.service.impl.VideoInfoServiceImpl;
+import com.machugit.es.EsSearchService;
 
 /**
  * 创作中心
@@ -26,6 +27,9 @@ import com.machugit.service.impl.VideoInfoServiceImpl;
 @RequestMapping("/ucenter")
 @Validated
 public class UCenterController extends ABaseController {
+
+    @Resource
+    private EsSearchService esSearchService;
 
     @Resource
     private VideoInfoServiceImpl videoInfoService;
@@ -63,6 +67,8 @@ public class UCenterController extends ABaseController {
             }
         }
         videoInfoService.postVideo(videoInfo, fileList);
+        // 同期到 Elasticsearch
+        esSearchService.indexVideo(bean);
         return getSuccessResponseVO(videoInfo);
     }
 

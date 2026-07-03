@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.machugit.entity.po.DanmuInfo;
 import com.machugit.entity.query.DanmuInfoQuery;
+import com.machugit.entity.vo.DanmuVO;
 
 
 /**
@@ -22,10 +23,9 @@ public interface DanmuInfoService {
     List<DanmuInfo> loadDanmu(String fileId, String videoId);
 
     /**
-     * 加载弹幕（管理员）
+     * 加载弹幕（管理员），返回包含视频名称和用户昵称的 VO 列表
      */
-    List<DanmuInfo> loadDanmuAdmin(DanmuInfoQuery query);
-
+    List<DanmuVO> loadDanmuAdmin(DanmuInfoQuery query);
     /**
      * 删除弹幕
      */

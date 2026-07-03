@@ -38,6 +38,7 @@ const menuItems = [
   { path: '/interact', label: '互动管理' },
   { path: '/user', label: '用户管理' },
   { path: '/banner', label: 'Banner管理' },
+  { path: '/theme', label: '主题管理' },
   { path: '/setting', label: '系统设置' }
 ]
 
@@ -50,7 +51,7 @@ async function handleLogout() {
   try {
     await logoutApi()
   } catch {
-    // ignore
+
   }
   clearToken()
   router.push({ name: 'login' })
@@ -62,14 +63,18 @@ async function handleLogout() {
   min-height: 100vh;
   display: flex;
 }
+
 .sidebar {
   width: 220px;
+  min-width: 220px;
+  max-width: 220px;
   flex-shrink: 0;
   background: var(--admin-sidebar-bg);
   display: flex;
   flex-direction: column;
   padding: 20px 0;
 }
+
 .logo {
   display: block;
   padding: 0 20px 24px;
@@ -77,29 +82,45 @@ async function handleLogout() {
   font-weight: 700;
   color: #fff;
 }
+
 .nav {
   flex: 1;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
   padding: 0 12px;
 }
+
 .nav-item {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
   padding: 12px 16px;
   border-radius: 8px;
   color: var(--admin-sidebar-text);
+  text-decoration: none;
+  font-weight: 400;
   transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 .nav-item:hover {
   background: rgba(255,255,255,0.06);
   color: #fff;
 }
+
 .nav-item.router-link-active {
   background: var(--admin-primary);
   color: #fff;
+  font-weight: 400;
 }
+
 .sidebar-footer {
   padding: 12px;
 }
+
 .logout-btn {
   width: 100%;
   padding: 10px;
@@ -109,16 +130,19 @@ async function handleLogout() {
   color: var(--admin-sidebar-text);
   cursor: pointer;
 }
+
 .logout-btn:hover {
   color: var(--admin-danger);
   border-color: var(--admin-danger);
 }
+
 .main-area {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
+
 .topbar {
   height: 56px;
   flex-shrink: 0;
@@ -128,13 +152,16 @@ async function handleLogout() {
   background: var(--admin-surface);
   border-bottom: 1px solid var(--admin-border);
 }
+
 .breadcrumb {
   font-size: 15px;
   font-weight: 600;
 }
+
 .content {
   flex: 1;
   padding: 24px;
-  overflow: auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 </style>

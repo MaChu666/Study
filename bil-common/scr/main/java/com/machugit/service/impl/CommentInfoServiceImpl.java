@@ -1,10 +1,15 @@
 package com.machugit.service.impl;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import com.machugit.entity.po.UserInfo;
+import com.machugit.entity.query.UserInfoQuery;
+import com.machugit.entity.vo.CommentVO;
+import com.machugit.mappers.UserInfoMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import com.machugit.entity.po.CommentInfo;
@@ -28,6 +33,9 @@ public class CommentInfoServiceImpl implements CommentInfoService {
 
     @Resource
     private VideoInfoMapper<VideoInfo, VideoInfoQuery> videoInfoMapper;
+
+    @Resource
+    private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
 
     /**
      * 加载评论
@@ -110,8 +118,50 @@ public class CommentInfoServiceImpl implements CommentInfoService {
      * 加载评论（管理员）
      */
     @Override
-    public List<CommentInfo> loadCommentAdmin(CommentInfoQuery query) {
-        return this.commentInfoMapper.selectList(query);
+    public List<CommentVO> loadCommentAdmin(CommentInfoQuery query) {
+        // 1. 查询原始评论列表
+        List<CommentInfo> commentList = this.commentInfoMapper.selectList(query);
+        if (commentList == null || commentList.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 2. 收集 videoId 和 userId
+        Set<String> videoIds = commentList.stream()
+                .map(CommentInfo::getVideoId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Set<String> userIds = commentList.stream()
+                .map(CommentInfo::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // 3. 批量查询视频名称
+        Map<String, String> videoNameMap = new HashMap<>();
+        if (!videoIds.isEmpty()) {
+            List<VideoInfo> videoList = videoInfoMapper.selectByVideoIds(videoIds);
+            videoNameMap = videoList.stream()
+                    .collect(Collectors.toMap(VideoInfo::getVideoId, VideoInfo::getVideoName));
+        }
+
+        // 4. 批量查询用户昵称
+        Map<String, String> userNameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<UserInfo> userList = userInfoMapper.selectByUserIds(userIds);
+            // 注意：用户名字段根据您的实体调整，可能是 getUserName() 或 getNickName()
+            userNameMap = userList.stream()
+                    .collect(Collectors.toMap(UserInfo::getUserId, UserInfo::getUseName));
+        }
+
+        // 5. 组装 VO
+        List<CommentVO> result = new ArrayList<>();
+        for (CommentInfo comment : commentList) {
+            CommentVO vo = new CommentVO();
+            BeanUtils.copyProperties(comment, vo);
+            vo.setVideoName(videoNameMap.getOrDefault(comment.getVideoId(), "视频已删除"));
+            vo.setUserName(userNameMap.getOrDefault(comment.getUserId(), "用户已注销"));
+            result.add(vo);
+        }
+        return result;
     }
 
     /**

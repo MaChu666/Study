@@ -121,67 +121,103 @@ function formatCount(n) {
   return String(n)
 }
 
-async function loadBanners() {
+async function loadBanners(signal) {
   try {
-    const data = await loadActiveBannersApi()
+    const data = await loadActiveBannersApi(signal)
+    if (signal && signal.aborted) return
     if (Array.isArray(data)) banners.value = data
-  } catch {}
+  } catch (e) {
+    if (signal && signal.aborted) return
+  }
 }
 
-async function loadCategories() {
+async function loadCategories(signal) {
   try {
-    const data = await loadAllCategoryApi()
+    const data = await loadAllCategoryApi(signal)
+    if (signal && signal.aborted) return
     if (Array.isArray(data) && data.length) {
       categories.value = [{ categoryId: 0, categoryName: '推荐' }, ...data]
     }
-  } catch {}
+  } catch (e) {
+    if (signal && signal.aborted) return
+  }
+}
+
+let pageAbortController = null
+function abortPageRequests() {
+  if (pageAbortController) {
+    pageAbortController.abort()
+  }
+  pageAbortController = new AbortController()
 }
 
 async function loadVideos() {
+  const signal = pageAbortController.signal
+  
   loading.value = true
   pageNo = 1
   try {
     const data = activeCat.value === 0
-      ? await loadRecommendVideoApi()
-      : await loadVideoApi({ pCategoryId: activeCat.value, categoryId: '0', pageNo: 1 })
+      ? await loadRecommendVideoApi(signal)
+      : await loadVideoApi({ pCategoryId: activeCat.value, categoryId: '0', pageNo: 1 }, signal)
+    if (signal.aborted) return
     const list = normalizeVideoList(data)
     videos.value = Array.isArray(list) ? list : []
-  } catch {
+  } catch (e) {
+    if (signal.aborted) return
     videos.value = []
   } finally {
-    loading.value = false
+    if (!signal.aborted) loading.value = false
   }
 }
 
 async function loadMore() {
+  if (loadingMore.value) return
   pageNo++
+  const signal = pageAbortController.signal
   try {
     const data = activeCat.value === 0
-      ? await loadRecommendVideoApi()
-      : await loadVideoApi({ pCategoryId: activeCat.value, categoryId: '0', pageNo })
+      ? await loadRecommendVideoApi(signal)
+      : await loadVideoApi({ pCategoryId: activeCat.value, categoryId: '0', pageNo }, signal)
+    if (signal.aborted) return
     const list = normalizeVideoList(data) || []
     videos.value = [...videos.value, ...list]
-  } catch {}
+  } catch (e) {
+    if (signal.aborted) return
+  }
 }
 
 async function loadHot() {
+  const signal = pageAbortController ? pageAbortController.signal : null
   try {
-    const data = await loadHotVideoListApi()
+    const data = await loadHotVideoListApi(signal)
+    if (signal && signal.aborted) return
     hotVideos.value = normalizeVideoList(data) || []
-  } catch {}
+  } catch (e) {
+    if (signal && signal.aborted) return
+  }
 }
 
 async function loadTags() {
+  const signal = pageAbortController ? pageAbortController.signal : null
   try {
-    const data = await getSearchKeywordTopApi()
+    const data = await getSearchKeywordTopApi(signal)
+    if (signal && signal.aborted) return
     hotTags.value = Array.isArray(data) ? data.slice(0, 15) : []
-  } catch {}
+  } catch (e) {
+    if (signal && signal.aborted) return
+  }
 }
 
+let switchTimer = null
 function switchCategory(c) {
+  abortPageRequests()
   activeCat.value = c.categoryId || c.id
   selectedCatName.value = c.categoryName || c.name
-  loadVideos()
+  if (switchTimer) clearTimeout(switchTimer)
+  switchTimer = setTimeout(() => {
+    loadVideos()
+  }, 150)
 }
 
 function onBannerClick(b) {
@@ -211,9 +247,13 @@ watch(
     if (activeCat.value !== catId) {
       const cat = categories.value.find((c) => (c.categoryId || c.id) === catId)
       if (cat) {
+        abortPageRequests()
         activeCat.value = catId
         selectedCatName.value = cat.categoryName || cat.name
-        loadVideos()
+        if (switchTimer) clearTimeout(switchTimer)
+        switchTimer = setTimeout(() => {
+          loadVideos()
+        }, 150)
       }
     }
   },
@@ -224,16 +264,22 @@ watch(
   () => route.name,
   (name) => {
     if (name === 'home' && !route.query.pCategoryId) {
+      abortPageRequests()
       activeCat.value = 0
       selectedCatName.value = '推荐'
-      loadVideos()
+      if (switchTimer) clearTimeout(switchTimer)
+      switchTimer = setTimeout(() => {
+        loadVideos()
+      }, 150)
     }
   }
 )
 
 onMounted(() => {
-  loadBanners()
-  loadCategories()
+  pageAbortController = new AbortController()
+  const signal = pageAbortController.signal
+  loadBanners(signal)
+  loadCategories(signal)
   loadVideos()
   loadHot()
   loadTags()

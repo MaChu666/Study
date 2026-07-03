@@ -208,6 +208,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 		if (null != useInfoName) {
 			throw new BusinessException("用户名已存在");
 		}
+		if (registerPassword == null || !registerPassword.matches(Constants.REGEX_PASSWORD)) {
+			throw new BusinessException("密码必须包含字母和数字，长度6-20位");
+		}
 		userInfo = new UserInfo();
 		String userId = StringTools.getRandomNumber(length_10);
 		userInfo.setUserId(userId);

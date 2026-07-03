@@ -18,6 +18,7 @@ const routes = [
       { path: 'interact', name: 'interact', component: () => import('@/views/InteractView.vue') },
       { path: 'user', name: 'user', component: () => import('@/views/UserView.vue') },
       { path: 'banner', name: 'banner', component: () => import('@/views/BannerView.vue') },
+      { path: 'theme', name: 'theme', component: () => import('@/views/ThemeView.vue') },
       { path: 'setting', name: 'setting', component: () => import('@/views/SettingView.vue') }
     ]
   }

@@ -13,7 +13,21 @@
     <el-form :model="form" label-position="top" class="publish-form">
       <div class="form-grid">
         <el-form-item label="视频封面">
-          <ImageUploader ref="coverUploaderRef" @uploaded="onCoverUploaded" @removed="onCoverRemoved" />
+          <div
+            class="cover-upload-area"
+            @click="showCoverCropper = true"
+          >
+            <img v-if="form.videoCover" :src="form.videoCover" class="cover-preview" alt="封面预览" />
+            <div v-else class="cover-placeholder">
+              <span class="cover-plus">+</span>
+              <p>点击上传封面（支持裁剪）</p>
+              <p class="cover-hint">支持 JPG / PNG / WebP</p>
+            </div>
+            <div v-if="form.videoCover" class="cover-mask">
+              <span>点击更换</span>
+            </div>
+          </div>
+          <el-button v-if="form.videoCover" size="small" style="margin-top:8px" @click="form.videoCover = ''">清除</el-button>
         </el-form-item>
         <el-form-item label="视频标题">
           <el-input v-model="form.videoName" placeholder="给你的作品起个标题" />
@@ -83,6 +97,7 @@
         <el-button class="delete-btn" text type="danger" size="small" @click.stop="handleDelete(video.videoId)">删除</el-button>
       </div>
     </div>
+    <ImageCropperDialog v-model="showCoverCropper" shape="rectangle" :aspectRatio="[16,9]" @success="onCoverCropped" />
   </section>
 </template>
 
@@ -92,16 +107,15 @@ import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import VideoCard from '@/components/video/VideoCard.vue'
 import VideoUploader from '@/components/video/VideoUploader.vue'
-import ImageUploader from '@/components/video/ImageUploader.vue'
 import { loadCreatorVideoListApi, postVideoApi } from '@/api/modules/user'
 import { deleteMyVideoApi } from '@/api/modules/user'
+import ImageCropperDialog from '@/components/common/ImageCropperDialog.vue'
 import { usePlayerStore } from '@/stores/player'
 import { normalizeVideoList } from '@/utils/videoList'
 
 const router = useRouter()
 const playerStore = usePlayerStore()
 const uploaderRef = ref(null)
-const coverUploaderRef = ref(null)
 const videos = ref([])
 const uploadedFileIdList = ref([])
 const form = reactive({
@@ -131,6 +145,7 @@ const parentCategories = [
 ]
 
 const videoStatus = ref(-1)
+const showCoverCropper = ref(false)
 const submitting = ref(false)
 
 async function loadVideos() {
@@ -142,6 +157,10 @@ async function loadVideos() {
   } catch {
     videos.value = []
   }
+}
+
+function onCoverCropped(filePath) {
+  form.videoCover = filePath
 }
 
 function onCoverUploaded(coverPath) {
@@ -185,7 +204,7 @@ async function submitVideo() {
     })
     uploadedFileIdList.value = []
     uploaderRef.value?.reset()
-    coverUploaderRef.value?.reset()
+    form.videoCover = ''
     await loadVideos()
   } catch {
     ElMessage.error('保存失败，请稍后再试')
@@ -339,4 +358,48 @@ onMounted(() => { loadVideos() })
     gap: 12px;
   }
 }
+
+/* Cover upload area */
+.cover-upload-area {
+  width: 320px;
+  height: 180px;
+  border: 2px dashed var(--bil-border, #ddd);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
+  overflow: hidden;
+  position: relative;
+}
+.cover-upload-area:hover {
+  border-color: var(--bil-primary, #00a1d6);
+  background: rgba(0, 161, 214, 0.05);
+}
+.cover-placeholder {
+  text-align: center;
+  color: var(--bil-muted, #999);
+}
+.cover-placeholder p { margin: 4px 0 0; font-size: 13px; }
+.cover-hint { font-size: 12px !important; opacity: 0.7; }
+.cover-plus { font-size: 32px; font-weight: 200; line-height: 1; }
+.cover-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cover-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.cover-mask:hover { opacity: 1; }
 </style>

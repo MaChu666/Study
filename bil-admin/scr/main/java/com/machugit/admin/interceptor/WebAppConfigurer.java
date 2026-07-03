@@ -1,20 +1,37 @@
 package com.machugit.admin.interceptor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
 
+/**
+ * 注册 Admin 端登录拦截器和静态资源映射
+ */
 @Configuration
 public class WebAppConfigurer implements WebMvcConfigurer {
+
+    @Value("")
+    private String projectFolder;
 
     @Resource
     private Appinterceptor appinterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(appinterceptor).addPathPatterns("/**");
+        registry.addInterceptor(appinterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/videos/**", "/images/**");
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/videos/**")
+                .addResourceLocations("file:" + projectFolder + "/videos/");
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("file:" + projectFolder + "/images/");
     }
 }
-

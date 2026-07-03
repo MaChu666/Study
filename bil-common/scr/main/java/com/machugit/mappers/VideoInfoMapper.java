@@ -1,8 +1,10 @@
 package com.machugit.mappers;
 
+import com.machugit.entity.po.VideoInfo;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 视频信息表 数据库操作接口
@@ -43,6 +45,12 @@ public interface VideoInfoMapper<T,P> extends BaseMapper<T,P> {
 	 * 根据UserId获取对象
 	 */
 	 List<T> selectByUserId(@Param("userId") String userId);
+
+
+	/**
+	 * 根据 videoId 集合批量查询（用于获取视频名称）
+	 */
+	List<VideoInfo> selectByVideoIds(@Param("videoIds") Set<String> videoIds);
 
 
 }

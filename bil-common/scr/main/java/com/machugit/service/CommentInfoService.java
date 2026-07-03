@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.machugit.entity.po.CommentInfo;
 import com.machugit.entity.query.CommentInfoQuery;
+import com.machugit.entity.vo.CommentVO;
 
 
 /**
@@ -39,7 +40,7 @@ public interface CommentInfoService {
     /**
      * 加载评论（管理员）
      */
-    List<CommentInfo> loadCommentAdmin(CommentInfoQuery query);
+    List<CommentVO> loadCommentAdmin(CommentInfoQuery query);
 
     /**
      * 删除评论（管理员）

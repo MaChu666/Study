@@ -1,5 +1,7 @@
-server:
+﻿server:
   port: 7070
+  tomcat:
+    max-http-form-post-size: 50MB
   servlet:
     context-path: /admin
 spring:
@@ -7,6 +9,7 @@ spring:
     multipart:
       max-file-size: 2GB
       max-request-size: 2GB
+
   application:
     name: bil-admin
   datasource:
@@ -34,13 +37,18 @@ spring:
         max-idle: 10
         min-idle: 0
     timeout: 2000
-#mybatis 大小写转驼峰
+
+
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    socket-timeout: 30s#mybatis 婵犮垹鐖㈤崘顏呯槗闂佸憡鍔栭悷銊ッ归崱妯镐粴闁绘挸楠稿Σ?
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
 project:
-  folder: d:/BilBil/biladmin
+  folder: d:/BilBil/bilweb
   video:
     upload-temp: d:/BilBil/bilweb/temp
     output: d:/BilBil/bilweb/videos
@@ -50,3 +58,5 @@ log:
 admin:
   account: admin
   password: admin123
+
+

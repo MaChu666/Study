@@ -64,6 +64,11 @@ service.interceptors.response.use(
     return Promise.reject(new Error(payload.info || '请求失败'))
   },
   (error) => {
+    // 请求被取消（快速切换等）
+    if (error.code === 'ERR_CANCELED' || error.name === 'CanceledError' || error.name === 'AbortError') {
+      ElMessage.warning('您切换的太快了！')
+      return Promise.reject(error)
+    }
     if (error.response && error.response.status === 401) {
       clearToken()
       eventBus.emit('auth:required')

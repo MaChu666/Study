@@ -56,7 +56,7 @@ public class AccountController extends ABaseController{
 	@RequestMapping("/register")
 	public ResponseVO register(@NotEmpty @Email @Size(max = 150) String email,
 							   @NotEmpty @Size(max = 20) String useName,
-							   @NotEmpty @Size(min = 6, max = 32) String registerPassword,
+							   @NotEmpty @Size(min = 6, max = 32) @Pattern(regexp = Constants.REGEX_PASSWORD, message = "密码必须包含字母和数字，长度6-20位") String registerPassword,
 							   @NotEmpty String checkCodeKey,
 							   @NotEmpty String checkCode) {
 		try{

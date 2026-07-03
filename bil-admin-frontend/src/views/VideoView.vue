@@ -6,7 +6,6 @@
         <el-option :value="1" label="已审核" />
         <el-option :value="2" label="已驳回" />
         <el-option :value="3" label="已隐藏" />
-        <el-option :value="-1" label="全部" />
       </el-select>
       <el-input v-model="searchKeyword" placeholder="搜索视频名称" clearable style="width:240px" @keyup.enter="loadData" />
       <el-button type="primary" @click="loadData">查询</el-button>
@@ -22,7 +21,7 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="useName" label="UP主" width="120" />
+      <el-table-column prop="userName" label="UP主" width="120" />
       <el-table-column prop="playCount" label="播放量" width="100" />
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
@@ -130,7 +129,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
-import { loadVideoListApi, auditVideoApi, deleteVideoApi, recommendVideoApi } from '@/api/modules/video'
+import { loadVideoListApi, auditVideoApi, deleteVideoApi, recommendVideoApi, loadVideoPListApi } from '@/api/modules/video'
 
 const statusFilter = ref(0)
 const searchKeyword = ref('')
@@ -146,9 +145,10 @@ const watchVideo = ref(null)
 const watchSrc = computed(() => {
   const v = watchVideo.value
   if (!v) return ''
-  if (v.filePath) return v.filePath
-  if (v.videoUrl) return v.videoUrl
-  return ''
+  const fp = v.filePath || v.videoUrl
+  if (!fp) return ''
+  if (fp.startsWith('http://') || fp.startsWith('https://') || fp.startsWith('/')) return fp
+  return '/' + fp.replace(/^[A-Za-z]:\\/, '').replace(/\\/g, '/').replace(/^.*?\/videos\//, 'videos/')
 })
 
 function openWatch(row) {
@@ -159,10 +159,10 @@ function openWatch(row) {
 
 async function loadWatchFile(videoId) {
   try {
-    const res = await request({ url: '/video/loadVideoPList', method: 'post', data: { videoId } })
-    const files = res?.data || res
+    const files = await loadVideoPListApi(videoId)
     if (Array.isArray(files) && files.length > 0) {
-      watchVideo.value = { ...watchVideo.value, filePath: files[0].filePath }
+      const fp = files[0]?.filePath || ''
+      watchVideo.value = { ...watchVideo.value, filePath: fp }
     }
   } catch {}
 }

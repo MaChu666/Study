@@ -39,7 +39,10 @@
       :class="{ active: String(route.query.pCategoryId || '0') === String(item.categoryId) }"
       @click="selectCategory(item)"
     >
-      <span class="nav-icon">{{ getCategoryIcon(item) }}</span>
+      <span class="nav-icon">
+        <img v-if="item.icon && isImageUrl(item.icon)" :src="item.icon" alt="" class="icon-img" @error="onImgError" />
+        <span v-else>{{ getCategoryIcon(item) }}</span>
+      </span>
       <span class="nav-label">{{ item.categoryName }}</span>
     </button>
   </aside>
@@ -116,6 +119,15 @@ function goHome() {
 
 function goHot() {
   router.push({ name: 'home', query: { hot: '1' } })
+}
+
+function isImageUrl(val) {
+  return val && (val.startsWith('/') || val.startsWith('http'))
+}
+
+function onImgError(e) {
+  e.target.style.display = 'none'
+  e.target.nextElementSibling.style.display = ''
 }
 
 function selectCategory(item) {
@@ -209,5 +221,12 @@ onMounted(loadCategories)
     border-radius: 10px;
     padding: 0 12px;
   }
+}
+.icon-img {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 </style>

@@ -9,7 +9,8 @@ export const useUserStore = defineStore('user', {
     profile: null,
     notificationDot: false,
     unreadCount: 0,
-    loginDialogVisible: false
+    loginDialogVisible: false,
+    lastLoginPromptTime: 0
   }),
   getters: {
     isLogin: (state) => Boolean(state.token && state.profile)
@@ -21,6 +22,7 @@ export const useUserStore = defineStore('user', {
       this.token = profile?.token || ''
       setToken(this.token)
       this.loginDialogVisible = false
+      this.lastLoginPromptTime = 0
       eventBus.emit('auth:changed', this.profile)
       return profile
     },
@@ -36,6 +38,7 @@ export const useUserStore = defineStore('user', {
         this.profile = profile
         this.token = profile.token
         setToken(profile.token)
+        this.lastLoginPromptTime = 0
         eventBus.emit('auth:changed', this.profile)
       }
       return profile
@@ -45,6 +48,7 @@ export const useUserStore = defineStore('user', {
       this.profile = null
       this.token = ''
       clearToken()
+      this.lastLoginPromptTime = 0
       eventBus.emit('auth:changed', null)
     },
     async fetchUnreadCount() {
@@ -63,6 +67,11 @@ export const useUserStore = defineStore('user', {
       }
     },
     openLoginDialog() {
+      const now = Date.now()
+      if (now - this.lastLoginPromptTime < 3600000) {
+        return
+      }
+      this.lastLoginPromptTime = now
       this.loginDialogVisible = true
     },
     markNotificationDot(value) {

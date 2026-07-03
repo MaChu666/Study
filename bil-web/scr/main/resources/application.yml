@@ -1,12 +1,14 @@
-server:
+﻿server:
   port: 7071
   tomcat:
     max-swallow-size: 2GB
+    max-http-form-post-size: 50MB
 spring:
   servlet:
     multipart:
       max-file-size: 2GB
       max-request-size: 2GB
+
   application:
     name: bil-web
   datasource:
@@ -34,7 +36,12 @@ spring:
         max-idle: 10
         min-idle: 0
     timeout: 2000
-#mybatis 大小写转驼峰
+
+
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    socket-timeout: 30s#mybatis 婢堆冪毈閸愭瑨娴嗘す鐓庡槻
 mybatis:
   configuration:
     map-underscore-to-camel-case: true

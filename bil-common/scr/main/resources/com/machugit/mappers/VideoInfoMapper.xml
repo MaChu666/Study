@@ -835,4 +835,16 @@
 		select <include refid="base_column_list" /> from video_info v LEFT JOIN user_info u ON v.user_id = u.user_id where user_id=#{userId}
 	</select>
 
+	<!-- 根据 videoId 集合批量查询视频信息 -->
+	<select id="selectByVideoIds" resultMap="base_result_map">
+		SELECT
+		<include refid="base_column_list" />
+		FROM video_info v
+		LEFT JOIN user_info u ON v.user_id = u.user_id
+		WHERE v.video_id IN
+		<foreach collection="videoIds" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
+
 </mapper>

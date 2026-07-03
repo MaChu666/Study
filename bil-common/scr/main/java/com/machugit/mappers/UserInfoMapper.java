@@ -1,6 +1,10 @@
 package com.machugit.mappers;
 
+import com.machugit.entity.po.UserInfo;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * 用户信息表 数据库操作接口
@@ -59,6 +63,14 @@ public interface UserInfoMapper<T,P> extends BaseMapper<T,P> {
 	 * 根据Email获取对象
 	 */
 	 T selectByEmail(@Param("email") String email);
+
+
+	/**
+	 * 根据 userId 集合批量查询（用于获取用户昵称）
+	 */
+	List<UserInfo> selectByUserIds(@Param("userIds") Set<String> userIds);
+
+
 
 
 }

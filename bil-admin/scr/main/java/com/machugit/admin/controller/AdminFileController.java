@@ -22,8 +22,8 @@ public class AdminFileController extends ABaseAdminController {
     @RequestMapping("/uploadImage")
     public ResponseVO uploadImage(@NotEmpty String file,
                                   @NotEmpty String createThumbnail) {
-        videoInfoFileService.uploadImage(file, Boolean.parseBoolean(createThumbnail));
-        return getSuccessResponseVO(null);
+        VideoInfoFile bean = videoInfoFileService.uploadImage(file, Boolean.parseBoolean(createThumbnail));
+        return getSuccessResponseVO(bean);
     }
 
     @RequestMapping("/getResource")

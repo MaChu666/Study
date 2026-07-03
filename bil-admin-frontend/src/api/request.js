@@ -4,7 +4,7 @@ import { clearToken, getToken } from '@/stores/auth'
 
 const service = axios.create({
   baseURL: '/admin',
-  timeout: 15000,
+  timeout: 120000,
   withCredentials: true
 })
 
@@ -44,17 +44,18 @@ service.interceptors.response.use(
       clearToken()
       window.location.href = '/login'
     }
-    ElMessage.error(payload.info || '请求失败')
-    return Promise.reject(new Error(payload.info || '请求失败'))
+    ElMessage.error(payload.info || '璇锋眰澶辫触')
+    return Promise.reject(new Error(payload.info || '璇锋眰澶辫触'))
   },
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 901) {
       clearToken()
       window.location.href = '/login'
     }
-    ElMessage.error(error.message || '网络异常')
+    ElMessage.error(error.message || '缃戠粶寮傚父')
     return Promise.reject(error)
   }
 )
 
 export default service
+

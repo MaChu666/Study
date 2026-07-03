@@ -37,10 +37,20 @@ public class AGlobalExceptionHandlerController{
             ajaxResponse.setCode(biz.getCode() == null ? ResponseCodeEnum.CODE_600.getCode() : biz.getCode());
             ajaxResponse.setInfo(biz.getMessage());
             ajaxResponse.setStatus(STATUC_ERROR);
-        } else if (e instanceof BindException|| e instanceof MethodArgumentTypeMismatchException|| e instanceof ConstraintViolationException) {
+        } else if (e instanceof BindException || e instanceof MethodArgumentTypeMismatchException) {
             //参数类型错误
             ajaxResponse.setCode(ResponseCodeEnum.CODE_600.getCode());
             ajaxResponse.setInfo(ResponseCodeEnum.CODE_600.getMsg());
+            ajaxResponse.setStatus(STATUC_ERROR);
+        } else if (e instanceof ConstraintViolationException) {
+            //参数校验失败，提取具体校验信息
+            ConstraintViolationException cve = (ConstraintViolationException) e;
+            ajaxResponse.setCode(ResponseCodeEnum.CODE_600.getCode());
+            String msg = cve.getConstraintViolations().stream()
+                    .map(v -> v.getMessage())
+                    .findFirst()
+                    .orElse(ResponseCodeEnum.CODE_600.getMsg());
+            ajaxResponse.setInfo(msg);
             ajaxResponse.setStatus(STATUC_ERROR);
         } else if (e instanceof DuplicateKeyException) {
             //主键冲突

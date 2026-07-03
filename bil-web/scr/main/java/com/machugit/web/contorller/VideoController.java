@@ -1,4 +1,4 @@
-package com.machugit.web.contorller;
+﻿package com.machugit.web.contorller;
 
 import java.util.List;
 
@@ -11,12 +11,16 @@ import com.machugit.entity.vo.PaginationResultVO;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.exception.BusinessException;
 import com.machugit.service.impl.VideoInfoServiceImpl;
+import com.machugit.es.EsSearchService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotEmpty;
+import com.machugit.entity.es.VideoDoc;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/video")
@@ -24,6 +28,9 @@ import javax.validation.constraints.NotEmpty;
 public class VideoController extends ABaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(VideoController.class);
+
+    @Resource
+    private EsSearchService esSearchService;
 
     @Resource
     private VideoInfoServiceImpl videoInfoService;
@@ -71,11 +78,43 @@ public class VideoController extends ABaseController {
      */
     @RequestMapping("/search")
     public ResponseVO search(@NotEmpty String keyword) {
+        List<VideoDoc> docs = esSearchService.searchVideo(keyword, 0, 20);
+        if (docs != null && !docs.isEmpty()) {
+            List<Map<String, Object>> results = new java.util.ArrayList<>();
+            for (VideoDoc doc : docs) {
+                Map<String, Object> item = new java.util.HashMap<>();
+                item.put("videoId", doc.getVideoId());
+                item.put("videoName", doc.getVideoName());
+                item.put("videoCover", doc.getVideoCover());
+                item.put("userId", doc.getUserId());
+                item.put("userName", doc.getUserName());
+                item.put("userAvatar", doc.getUserAvatar());
+                item.put("playCount", doc.getPlayCount());
+                item.put("likeCount", doc.getLikeCount());
+                item.put("danmuCount", doc.getDanmuCount());
+                item.put("commentCount", doc.getCommentCount());
+                item.put("tags", doc.getTags());
+                item.put("introduction", doc.getIntroduction());
+                item.put("createTime", doc.getCreateTime());
+                results.add(item);
+            }
+            return getSuccessResponseVO(results);
+        }
+        // Fallback to MySQL
         List<VideoInfo> list = videoInfoService.search(keyword);
         return getSuccessResponseVO(list);
     }
 
     /**
+    /**
+     * 搜索联想建议
+     */
+    @RequestMapping("/suggest")
+    public ResponseVO suggest(@NotEmpty String keyword) {
+        List<String> suggestions = esSearchService.suggestVideo(keyword, 10);
+        return getSuccessResponseVO(suggestions);
+    }
+
      * 获取搜索关键词排行
      */
     @RequestMapping("/getSearchKeywordTop")

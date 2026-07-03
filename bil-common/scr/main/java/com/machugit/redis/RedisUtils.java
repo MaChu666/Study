@@ -189,8 +189,10 @@ public class RedisUtils<V> {
 
     public List<V> getZSetList(String key, Integer count) {
         Set<V> topElements = redisTemplate.opsForZSet().reverseRange(key, 0, count);
-        List<V> list = new ArrayList<>(topElements);
-        return list;
+        if (topElements == null || topElements.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(topElements);
     }
 }
 

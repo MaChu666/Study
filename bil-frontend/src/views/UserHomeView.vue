@@ -35,7 +35,7 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.04 10 9c0 3.31-2.69 6-6 6h-1.77c-.28 0-.5.22-.5.5 0 .12.05.23.13.33.41.47.64 1.06.64 1.67A2.5 2.5 0 0 1 12 22zm0-18c-4.41 0-8 3.59-8 8s3.59 8 8 8c.28 0 .5-.22.5-.5a.54.54 0 0 0-.14-.35c-.41-.46-.63-1.05-.63-1.65a2.5 2.5 0 0 1 2.5-2.5H16c2.21 0 4-1.79 4-4 0-3.86-3.59-7-8-7z"/><circle cx="6.5" cy="11.5" r="1.5"/><circle cx="9.5" cy="7.5" r="1.5"/><circle cx="14.5" cy="7.5" r="1.5"/><circle cx="17.5" cy="11.5" r="1.5"/></svg>
       </div>
       <div v-if="showThemePicker" class="theme-picker">
-        <div v-for="(t, i) in presets" :key="i" class="theme-option" :class="{ active: (profile.theme || 1) === (i + 1) }" :style="{ background: t.gradient }" @click="selectTheme(i + 1)" />
+        <div v-for="t in themeList" :key="t.themeId" class="theme-option" :class="{ active: (profile.theme || 1) === t.themeId }" :style="{ background: t.gradient }" @click="selectTheme(t.themeId)" />
       </div>
     </div>
 
@@ -477,6 +477,9 @@
       </template>
     </div>
 
+    <!-- Image Cropper Dialog for avatar -->
+    <ImageCropperDialog v-model="showAvatarCropper" shape="circle" :aspectRatio="[1,1]" @success="onAvatarCropped" />
+
     <!-- Hidden file inputs for avatar / banner -->
     <input
       ref="avatarInputRef"
@@ -523,6 +526,7 @@ import {
   loadVideoSeriesWithVideoApi,
   updateUserInfoApi,
   saveThemeApi,
+  loadThemesApi,
   focusApi,
   cancelFocusApi,
   loadFocusListApi,
@@ -538,6 +542,7 @@ import DynamicPostEditor from '@/components/user/DynamicPostEditor.vue'
 import FollowListDialog from '@/components/user/FollowListDialog.vue'
 import PrivateMessageDialog from '@/components/user/PrivateMessageDialog.vue'
 import UserBadge from '@/components/user/UserBadge.vue'
+import ImageCropperDialog from '@/components/common/ImageCropperDialog.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useUserStore } from '@/stores/user'
 import { normalizeVideoList } from '@/utils/videoList'
@@ -575,24 +580,17 @@ const editingSignature = ref(false)
 const signatureDraft = ref('')
 const signatureInputRef = ref(null)
 const avatarInputRef = ref(null)
+const showAvatarCropper = ref(false)
 const bannerInputRef = ref(null)
 const fieldInputRef = ref(null)
 
-const presets = [
-  { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-  { gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-  { gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-  { gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
-  { gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
-  { gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)' },
-  { gradient: 'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)' },
-  { gradient: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)' }
-]
+const themeList = ref([])
 
 const showThemePicker = ref(false)
 const themeGradient = computed(() => {
-  const idx = (profile.value.theme || 1) - 1
-  return (presets[idx] || presets[0]).gradient
+  const themeId = profile.value.theme || 1
+  const found = themeList.value.find(t => t.themeId === themeId)
+  return found ? found.gradient : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
 })
 
 const tabs = [
@@ -644,7 +642,18 @@ const levelPercent = computed(function () {
 
 // --- Load user info ---
 
-async function loadProfile() {
+async function loadThemeList() {
+      try {
+        const data = await loadThemesApi()
+        if (data && data.length > 0) {
+          themeList.value = data
+        }
+      } catch {
+        // keep defaults
+      }
+    }
+
+    async function loadProfile() {
   var userId = route.params.userId || ''
   try {
     var data = await getUserInfoApi({ userId: userId })
@@ -875,20 +884,18 @@ async function saveFieldEdit() {
 }
 
 function editAvatar() {
-  if (avatarInputRef.value) {
-    avatarInputRef.value.click()
-  }
+  showAvatarCropper.value = true
 }
 
 function editBanner() {
   showThemePicker.value = !showThemePicker.value
 }
 
-async function selectTheme(idx) {
+async function selectTheme(themeId) {
   showThemePicker.value = false
   try {
-    await saveThemeApi({ userId: profile.value.userId, theme: String(idx) })
-    profile.value.theme = idx
+    await saveThemeApi({ userId: profile.value.userId, theme: String(themeId) })
+    profile.value.theme = themeId
     ElMessage.success('主题已更新')
   } catch { ElMessage.error('主题设置失败') }
 }
@@ -919,7 +926,30 @@ async function uploadAndSet(path, fieldKey, successMsg) {
   })
 }
 
-async function onAvatarFile(e) {
+async function onAvatarCropped(filePath) {
+    if (!filePath) {
+      ElMessage.error("头像路径为空")
+      return
+    }
+    try {
+      // 乐观更新：先更新本地头像
+      profile.value.avatar = filePath
+      if (userStore.profile) userStore.profile.avatar = filePath
+      
+      var payload = {}
+      payload.avatar = filePath
+      await updateUserInfoApi(payload)
+      await loadProfile()
+      ElMessage.success("头像已更新")
+    } catch (_err) {
+      ElMessage.error("更新头像失败")
+      // 回滚本地头像
+      await loadProfile()
+    }
+  }
+
+  // Legacy
+  async function onAvatarFile(e) {
   var file = e.target && e.target.files && e.target.files[0]
   if (!file) return
   await uploadAndSet(file, 'avatar', '头像已更新')
@@ -1074,6 +1104,7 @@ function openSeries(s) {
 // --- Lifecycle ---
 
 onMounted(async function () {
+  loadThemeList()
   await loadProfile()
   // Load default tab content
   loadTabContent(activeTab.value)

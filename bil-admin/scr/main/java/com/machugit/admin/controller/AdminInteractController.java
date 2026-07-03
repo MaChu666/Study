@@ -2,10 +2,10 @@ package com.machugit.admin.controller;
 
 import java.util.List;
 
-import com.machugit.entity.po.CommentInfo;
-import com.machugit.entity.po.DanmuInfo;
 import com.machugit.entity.query.CommentInfoQuery;
 import com.machugit.entity.query.DanmuInfoQuery;
+import com.machugit.entity.vo.CommentVO;
+import com.machugit.entity.vo.DanmuVO;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.service.impl.CommentInfoServiceImpl;
 import com.machugit.service.impl.DanmuInfoServiceImpl;
@@ -34,7 +34,7 @@ public class AdminInteractController extends ABaseAdminController {
         query.setPageNo(Integer.parseInt(pageNo));
         query.setVideoIdFuzzy(videoNameFuzzy);
         query.setOrderBy("post_time desc");
-        List<DanmuInfo> list = danmuInfoService.loadDanmuAdmin(query);
+        List<DanmuVO> list = danmuInfoService.loadDanmuAdmin(query);
         return getSuccessResponseVO(list);
     }
 
@@ -51,7 +51,7 @@ public class AdminInteractController extends ABaseAdminController {
         query.setPageNo(Integer.parseInt(pageNo));
         query.setVideoIdFuzzy(videoNameFuzzy);
         query.setOrderBy("create_time desc");
-        List<CommentInfo> list = commentInfoService.loadCommentAdmin(query);
+        List<CommentVO> list = commentInfoService.loadCommentAdmin(query);
         return getSuccessResponseVO(list);
     }
 
