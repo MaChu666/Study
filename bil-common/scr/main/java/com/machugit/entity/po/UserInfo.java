@@ -27,6 +27,16 @@ public class UserInfo implements Serializable {
 	private String useName;
 
 	/**
+	 * 头像URL
+	 */
+	private String avatar;
+
+	/**
+	 * 个人空间头图
+	 */
+	private String bannerImage;
+
+	/**
 	 * 邮箱
 	 */
 	private String email;
@@ -76,6 +86,11 @@ public class UserInfo implements Serializable {
 	private String lastLoginIp;
 
 	/**
+	 * 最后阅读消息时间
+	 */
+	private Date lastReadTime;
+
+	/**
 	 * 状态（0：封禁 1：正常）
 	 */
 	private Integer status;
@@ -94,6 +109,34 @@ public class UserInfo implements Serializable {
 	 * 当前硬币数
 	 */
 	private Integer currentCoinCount;
+
+	/**
+	 * 用户等级（0-6级）
+	 */
+	private Integer level;
+
+	/**
+	 * 当前经验值
+	 */
+	private Integer exp;
+
+	/**
+	 * 大会员类型
+	 */
+	private Integer vipType;
+
+	/**
+	 * 大会员过期时间
+	 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	private Date vipExpireTime;
+
+	/**
+	 * 直播状态
+	 */
+	private Integer liveStatus;
+
 
 	/**
 	 * 主题
@@ -116,6 +159,11 @@ public class UserInfo implements Serializable {
 	public String getUseName(){
 		return this.useName;
 	}
+
+	public void setAvatar(String avatar){ this.avatar = avatar; }
+	public String getAvatar(){ return this.avatar; }
+	public void setBannerImage(String bannerImage){ this.bannerImage = bannerImage; }
+	public String getBannerImage(){ return this.bannerImage; }
 
 	public void setEmail(String email){
 		this.email = email;
@@ -189,6 +237,9 @@ public class UserInfo implements Serializable {
 		return this.lastLoginIp;
 	}
 
+	public void setLastReadTime(Date lastReadTime){ this.lastReadTime = lastReadTime; }
+	public Date getLastReadTime(){ return this.lastReadTime; }
+
 	public void setStatus(Integer status){
 		this.status = status;
 	}
@@ -220,6 +271,17 @@ public class UserInfo implements Serializable {
 	public Integer getCurrentCoinCount(){
 		return this.currentCoinCount;
 	}
+
+	public void setLevel(Integer level){ this.level = level; }
+	public Integer getLevel(){ return this.level; }
+	public void setExp(Integer exp){ this.exp = exp; }
+	public Integer getExp(){ return this.exp; }
+	public void setVipType(Integer vipType){ this.vipType = vipType; }
+	public Integer getVipType(){ return this.vipType; }
+	public void setLiveStatus(Integer liveStatus){ this.liveStatus = liveStatus; }
+	public Integer getLiveStatus(){ return this.liveStatus; }
+	public void setVipExpireTime(Date vipExpireTime){ this.vipExpireTime = vipExpireTime; }
+	public Date getVipExpireTime(){ return this.vipExpireTime; }
 
 	public void setTheme(Integer theme){
 		this.theme = theme;

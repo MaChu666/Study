@@ -24,6 +24,13 @@ public class UserActionController extends ABaseController {
     @Resource
     private UserActionServiceImpl userActionService;
 
+    @RequestMapping("/checkStatus")
+    public ResponseVO checkStatus(@NotEmpty String videoId) {
+        TokenUserInfoDto user = getTokenUserInfoDto();
+        if (user == null) return getSuccessResponseVO(null);
+        return getSuccessResponseVO(userActionService.checkStatus(videoId, user.getUserId()));
+    }
+
     @RequestMapping("/doAction")
     public ResponseVO doAction(@NotEmpty String videoId,
                                @NotEmpty String actionType,

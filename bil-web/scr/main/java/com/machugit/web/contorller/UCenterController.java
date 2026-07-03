@@ -11,7 +11,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.machugit.entity.dto.TokenUserInfoDto;
 import com.machugit.entity.po.VideoInfo;
+import com.machugit.exception.BusinessException;
 import com.machugit.entity.query.VideoInfoQuery;
 import com.machugit.entity.vo.PaginationResultVO;
 import com.machugit.entity.vo.ResponseVO;
@@ -29,37 +31,54 @@ public class UCenterController extends ABaseController {
     private VideoInfoServiceImpl videoInfoService;
 
     @RequestMapping("/postVideo")
-    public ResponseVO postVideo(@NotEmpty String videoCover,
+    public ResponseVO postVideo(String videoCover,
                                  @NotEmpty String videoName,
                                  @NotEmpty String pCategoryId,
                                  @NotEmpty String categoryId,
-                                 @NotEmpty String postType,
-                                 @NotEmpty String tags,
-                                 @NotEmpty String introduction,
-                                 @NotEmpty String interaction,
-                                 @NotEmpty String uploadFileList) {
+                                 String postType,
+                                 String tags,
+                                 String introduction,
+                                 String interaction,
+                                 String uploadFileList) {
         VideoInfo videoInfo = new VideoInfo();
-        videoInfo.setVideoCover(videoCover);
+        if (videoCover != null && !videoCover.isEmpty()) videoInfo.setVideoCover(videoCover);
         videoInfo.setVideoName(videoName);
         videoInfo.setPCategoryId(Integer.valueOf(pCategoryId));
         videoInfo.setCategoryId(Integer.valueOf(categoryId));
-        videoInfo.setPostType(Integer.valueOf(postType));
-        videoInfo.setTags(tags);
-        videoInfo.setIntroduction(introduction);
-        videoInfo.setInteraction(interaction);
-        // TODO 从token获取当前用户userId
-        videoInfo.setUserId("currentUser");
-        // TODO 解析uploadFileList为文件ID列表
-        videoInfoService.postVideo(videoInfo, null);
+        if (postType != null && !postType.isEmpty()) videoInfo.setPostType(Integer.valueOf(postType));
+        videoInfo.setTags(tags != null ? tags : "");
+        videoInfo.setIntroduction(introduction != null ? introduction : "");
+        videoInfo.setInteraction(interaction != null ? interaction : "");
+        TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
+        if (tokenUserInfoDto == null) {
+            throw new BusinessException("请先登录");
+        }
+        videoInfo.setUserId(tokenUserInfoDto.getUserId());
+        List<String> fileList = new java.util.ArrayList<>();
+        if (uploadFileList != null && !uploadFileList.trim().isEmpty()) {
+            for (String fid : uploadFileList.split(",")) {
+                if (!fid.trim().isEmpty()) {
+                    fileList.add(fid.trim());
+                }
+            }
+        }
+        videoInfoService.postVideo(videoInfo, fileList);
         return getSuccessResponseVO(videoInfo);
     }
 
     @RequestMapping("/loadVideoList")
-    public ResponseVO loadVideoList(@NotEmpty String status,
+    public ResponseVO loadVideoList(String status,
                                     @NotEmpty String pageNo,
                                     String videoNameFuzzy) {
+        TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
         VideoInfoQuery query = new VideoInfoQuery();
-        query.setStatus(Integer.valueOf(status));
+        if (status != null && !status.isEmpty()) {
+            int s = Integer.parseInt(status);
+            if (s >= 0) query.setStatus(s);
+        }
+        if (tokenUserInfoDto != null) {
+            query.setUserId(tokenUserInfoDto.getUserId());
+        }
         query.setPageNo(Integer.valueOf(pageNo));
         if (videoNameFuzzy != null && !videoNameFuzzy.isEmpty()) {
             query.setVideoNameFuzzy(videoNameFuzzy);
@@ -99,6 +118,11 @@ public class UCenterController extends ABaseController {
 
     @RequestMapping("/deleteVideo")
     public ResponseVO deleteVideo(@NotEmpty String videoId) {
+        TokenUserInfoDto user = getTokenUserInfoDto();
+        if (user == null) throw new BusinessException("请先登录");
+        VideoInfo v = videoInfoService.getVideoInfo(videoId);
+        if (v == null) throw new BusinessException("视频不存在");
+        if (!user.getUserId().equals(v.getUserId())) throw new BusinessException("只能删除自己的视频");
         videoInfoService.deleteVideo(videoId);
         return getSuccessResponseVO(null);
     }

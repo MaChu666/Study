@@ -6,7 +6,24 @@
       "Bash(git commit -m ' *)",
       "Bash(git branch *)",
       "Bash(mvn clean *)",
-      "Bash(mvn compile *)"
+      "Bash(mvn compile *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(dir \"D:\\\\BilBil\\\\bilweb\\\\videos\")",
+      "Read(//d/BilBil/bilweb/videos/**)",
+      "Bash(tasklist)",
+      "Bash(taskkill /F /IM ffmpeg.exe)",
+      "Read(//d/BilBil/bilweb/temp/**)",
+      "Read(//d/BilBil/bilweb/**)",
+      "Bash(npx vite *)",
+      "Bash(python -c ' *)",
+      "Bash(pip install *)",
+      "Bash(git checkout *)",
+      "Bash(sed -i '76a\\\\\\\\t/**\\\\n\\\\t * 最后阅读消息时间\\\\n\\\\t */\\\\n\\\\tprivate Date lastReadTime;\\\\n' bil-common/scr/main/java/com/machugit/entity/po/UserInfo.java)",
+      "Bash(sed -i '190a\\\\\\\\n\\\\tpublic void setLastReadTime\\(Date lastReadTime\\){ this.lastReadTime = lastReadTime; }\\\\n\\\\tpublic Date getLastReadTime\\(\\){ return this.lastReadTime; }' bil-common/scr/main/java/com/machugit/entity/po/UserInfo.java)",
+      "Bash(xxd)",
+      "Bash(file *)",
+      "Bash(python3 *)"
     ]
   }
 }

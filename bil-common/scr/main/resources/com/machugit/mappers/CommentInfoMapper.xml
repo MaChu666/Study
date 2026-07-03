@@ -15,6 +15,7 @@
 		<result column="content" property="content"  />
 		<!--回复评论id-->
 		<result column="reply_comment_id" property="replyCommentId"  />
+		<result column="root" property="root"  />
 		<!--图片路径-->
 		<result column="img_path" property="imgPath"  />
 		<!--置顶类型-->
@@ -26,7 +27,7 @@
 
 	<!-- 通用查询结果列-->
 	<sql id="base_column_list">
-		 c.comment_id,c.video_id,c.user_id,c.content,c.reply_comment_id,
+		 c.comment_id,c.video_id,c.user_id,c.content,c.reply_comment_id, c.root,
 		 c.img_path,c.top_type,c.create_time
 	</sql>
 
@@ -45,6 +46,9 @@
 			</if>
 			<if test="query.replyCommentId != null">
 				 and  c.reply_comment_id = #{query.replyCommentId}
+			</if>
+			<if test="query.root != null">
+				 and  c.root = #{query.root}
 			</if>
 			<if test="query.imgPath != null and query.imgPath!=''">
 				 and  c.img_path = #{query.imgPath}
@@ -108,6 +112,9 @@
 			<if test="bean.replyCommentId != null">
 				 reply_comment_id,
 			</if>
+			<if test="bean.root != null">
+				 root,
+			</if>
 			<if test="bean.imgPath != null">
 				 img_path,
 			</if>
@@ -133,6 +140,9 @@
 			</if>
 			<if test="bean.replyCommentId!=null">
 				 #{bean.replyCommentId},
+			</if>
+			<if test="bean.root!=null">
+				 #{bean.root},
 			</if>
 			<if test="bean.imgPath!=null">
 				 #{bean.imgPath},
@@ -165,6 +175,9 @@
 			<if test="bean.replyCommentId != null">
 				 reply_comment_id,
 			</if>
+			<if test="bean.root != null">
+				 root,
+			</if>
 			<if test="bean.imgPath != null">
 				 img_path,
 			</if>
@@ -190,6 +203,9 @@
 			</if>
 			<if test="bean.replyCommentId!=null">
 				 #{bean.replyCommentId},
+			</if>
+			<if test="bean.root!=null">
+				 #{bean.root},
 			</if>
 			<if test="bean.imgPath!=null">
 				 #{bean.imgPath},

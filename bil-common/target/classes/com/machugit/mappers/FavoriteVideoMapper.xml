@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.FavoriteVideoMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.FavoriteVideo">
+		<!--记录id-->
+		<result column="id" property="id"  />
+		<!--收藏夹id-->
+		<result column="folder_id" property="folderId"  />
+		<!--用户id-->
+		<result column="user_id" property="userId"  />
+		<!--视频id-->
+		<result column="video_id" property="videoId"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 v.id,v.folder_id,v.user_id,v.video_id,v.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.id != null">
+				 and  v.id = #{query.id}
+			</if>
+			<if test="query.folderId != null">
+				 and  v.folder_id = #{query.folderId}
+			</if>
+			<if test="query.userId != null and query.userId!=''">
+				 and  v.user_id = #{query.userId}
+			</if>
+			<if test="query.videoId != null and query.videoId!=''">
+				 and  v.video_id = #{query.videoId}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  v.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  v.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  v.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM favorite_video v <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM favorite_video v <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.FavoriteVideo">
+		 INSERT INTO favorite_video
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.folderId != null">
+				 folder_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.folderId!=null">
+				 #{bean.folderId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.FavoriteVideo">
+		 INSERT INTO favorite_video
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.folderId != null">
+				 folder_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.folderId!=null">
+				 #{bean.folderId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 id = VALUES(id),
+			</if>
+			<if test="bean.folderId!=null">
+				 folder_id = VALUES(folder_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.videoId!=null">
+				 video_id = VALUES(video_id),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.FavoriteVideo">
+		 INSERT INTO favorite_video(
+			 id,
+			 folder_id,
+			 user_id,
+			 video_id,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.id},
+				 #{item.folderId},
+				 #{item.userId},
+				 #{item.videoId},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.FavoriteVideo">
+		 INSERT INTO favorite_video(
+			 id,
+			 folder_id,
+			 user_id,
+			 video_id,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.id},
+				 #{item.folderId},
+				 #{item.userId},
+				 #{item.videoId},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			id = VALUES(id),
+			folder_id = VALUES(folder_id),
+			user_id = VALUES(user_id),
+			video_id = VALUES(video_id),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.FavoriteVideoQuery">
+		 UPDATE favorite_video v
+ 		 <set>
+			<if test="bean.id != null">
+				 id = #{bean.id},
+			</if>
+			<if test="bean.folderId != null">
+				 folder_id = #{bean.folderId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete v from favorite_video v
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据Id修改-->
+	<update id="updateById" parameterType="com.machugit.entity.po.FavoriteVideo">
+		 UPDATE favorite_video
+ 		 <set>
+			<if test="bean.folderId != null">
+				 folder_id = #{bean.folderId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where id=#{id}
+	</update>
+
+	<!-- 根据Id删除-->
+	<delete id="deleteById">
+		delete from favorite_video where id=#{id}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectById" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from favorite_video v where v.id=#{id}
+	</select>
+
+	<!-- 根据FolderId修改-->
+	<update id="updateByFolderId" parameterType="com.machugit.entity.po.FavoriteVideo">
+		 UPDATE favorite_video
+ 		 <set>
+			<if test="bean.id != null">
+				 id = #{bean.id},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where folder_id=#{folderId}
+	</update>
+
+	<!-- 根据FolderId删除-->
+	<delete id="deleteByFolderId">
+		delete from favorite_video where folder_id=#{folderId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByFolderId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from favorite_video v where v.folder_id=#{folderId}
+	</select>
+
+	<!-- 根据UserId修改-->
+	<update id="updateByUserId" parameterType="com.machugit.entity.po.FavoriteVideo">
+		 UPDATE favorite_video
+ 		 <set>
+			<if test="bean.id != null">
+				 id = #{bean.id},
+			</if>
+			<if test="bean.folderId != null">
+				 folder_id = #{bean.folderId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId}
+	</update>
+
+	<!-- 根据UserId删除-->
+	<delete id="deleteByUserId">
+		delete from favorite_video where user_id=#{userId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from favorite_video v where v.user_id=#{userId}
+	</select>
+
+</mapper>

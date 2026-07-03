@@ -39,8 +39,10 @@ public class AdminVideoController extends ABaseAdminController {
     @RequestMapping("/auditVideo")
     public ResponseVO auditVideo(@NotEmpty String videoId,
                                  @NotEmpty String status,
-                                 @NotEmpty String reason) {
-        videoInfoService.auditVideo(videoId, Integer.parseInt(status), reason);
+                                 String reason) {
+        Integer statusInt = Integer.valueOf(status);
+        String reasonStr = (reason == null || reason.trim().isEmpty()) ? null : reason;
+        videoInfoService.auditVideo(videoId, statusInt, reasonStr);
         return getSuccessResponseVO(null);
     }
 

@@ -57,6 +57,15 @@ public class FileController extends ABaseController {
     }
 
     /**
+     * 合并分片并转码
+     */
+    @RequestMapping("/completeUpload")
+    public ResponseVO completeUpload(@NotEmpty String uploadId, @NotEmpty String fileId) {
+        videoInfoFileService.completeUpload(uploadId, fileId);
+        return getSuccessResponseVO(null);
+    }
+
+    /**
      * 删除上传视频
      */
     @RequestMapping("/delUploadVideo")
@@ -69,8 +78,8 @@ public class FileController extends ABaseController {
      * 上传图片
      */
     @RequestMapping("/uploadImage")
-    public ResponseVO uploadImage(@NotEmpty String file, @NotEmpty String createThumbnail) {
-        VideoInfoFile bean = videoInfoFileService.uploadImage(file, Boolean.valueOf(createThumbnail));
+    public ResponseVO uploadImage(@NotEmpty String file, String createThumbnail) {
+        VideoInfoFile bean = videoInfoFileService.uploadImage(file, "true".equals(createThumbnail));
         return getSuccessResponseVO(bean);
     }
 

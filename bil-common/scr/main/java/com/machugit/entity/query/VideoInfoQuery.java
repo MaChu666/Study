@@ -41,6 +41,13 @@ public class VideoInfoQuery extends BaseParam {
     private Integer postType;
 
     /**
+     * 转载来源链接（转载时必填）
+     */
+    private String sourceUrl;
+
+    private String sourceUrlFuzzy;
+
+    /**
      * 标签
      */
     private String tags;
@@ -100,6 +107,11 @@ public class VideoInfoQuery extends BaseParam {
     private Integer status;
 
     /**
+     * 逻辑删除（0：正常 1：已删）
+     */
+    private Integer isDeleted;
+
+    /**
      * 创建时间
      */
     private String createTime;
@@ -107,6 +119,15 @@ public class VideoInfoQuery extends BaseParam {
     private String createTimeStart;
 
     private String createTimeEnd;
+
+    /**
+     * 定时发布时间（为空则立即发布）
+     */
+    private String scheduledPublishTime;
+
+    private String scheduledPublishTimeStart;
+
+    private String scheduledPublishTimeEnd;
 
     /**
      * 更新时间
@@ -172,6 +193,22 @@ public class VideoInfoQuery extends BaseParam {
 
     public Integer getPostType(){
         return this.postType;
+    }
+
+    public void setSourceUrl(String sourceUrl){
+        this.sourceUrl = sourceUrl;
+    }
+
+    public String getSourceUrl(){
+        return this.sourceUrl;
+    }
+
+    public void setSourceUrlFuzzy(String sourceUrlFuzzy){
+        this.sourceUrlFuzzy = sourceUrlFuzzy;
+    }
+
+    public String getSourceUrlFuzzy(){
+        return this.sourceUrlFuzzy;
     }
 
     public void setTags(String tags){
@@ -278,6 +315,14 @@ public class VideoInfoQuery extends BaseParam {
         return this.status;
     }
 
+    public void setIsDeleted(Integer isDeleted){
+        this.isDeleted = isDeleted;
+    }
+
+    public Integer getIsDeleted(){
+        return this.isDeleted;
+    }
+
     public void setCreateTime(String createTime){
         this.createTime = createTime;
     }
@@ -300,6 +345,30 @@ public class VideoInfoQuery extends BaseParam {
 
     public String getCreateTimeEnd(){
         return this.createTimeEnd;
+    }
+
+    public void setScheduledPublishTime(String scheduledPublishTime){
+        this.scheduledPublishTime = scheduledPublishTime;
+    }
+
+    public String getScheduledPublishTime(){
+        return this.scheduledPublishTime;
+    }
+
+    public void setScheduledPublishTimeStart(String scheduledPublishTimeStart){
+        this.scheduledPublishTimeStart = scheduledPublishTimeStart;
+    }
+
+    public String getScheduledPublishTimeStart(){
+        return this.scheduledPublishTimeStart;
+    }
+
+    public void setScheduledPublishTimeEnd(String scheduledPublishTimeEnd){
+        this.scheduledPublishTimeEnd = scheduledPublishTimeEnd;
+    }
+
+    public String getScheduledPublishTimeEnd(){
+        return this.scheduledPublishTimeEnd;
     }
 
     public void setUpdateTime(String updateTime){

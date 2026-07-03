@@ -123,4 +123,9 @@ public interface UserInfoService {
  	*/
 	TokenUserInfoDto login(String email, String password, String ip);
 
+	/**
+	 * 根据关键词搜索用户
+	 */
+	List<UserInfo> searchUsers(String keyword);
+
 }

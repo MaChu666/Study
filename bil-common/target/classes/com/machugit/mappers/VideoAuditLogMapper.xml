@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.VideoAuditLogMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.VideoAuditLog">
+		<!--审核id-->
+		<result column="audit_id" property="auditId"  />
+		<!--视频id-->
+		<result column="video_id" property="videoId"  />
+		<!--审核人id-->
+		<result column="auditor_id" property="auditorId"  />
+		<!--变更前状态-->
+		<result column="from_status" property="fromStatus"  />
+		<!--变更后状态-->
+		<result column="to_status" property="toStatus"  />
+		<!--审核原因-->
+		<result column="reason" property="reason"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 a.audit_id,a.video_id,a.auditor_id,a.from_status,a.to_status,
+		 a.reason,a.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.auditId != null">
+				 and  a.audit_id = #{query.auditId}
+			</if>
+			<if test="query.videoId != null and query.videoId!=''">
+				 and  a.video_id = #{query.videoId}
+			</if>
+			<if test="query.auditorId != null and query.auditorId!=''">
+				 and  a.auditor_id = #{query.auditorId}
+			</if>
+			<if test="query.fromStatus != null">
+				 and  a.from_status = #{query.fromStatus}
+			</if>
+			<if test="query.toStatus != null">
+				 and  a.to_status = #{query.toStatus}
+			</if>
+			<if test="query.reason != null and query.reason!=''">
+				 and  a.reason = #{query.reason}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  a.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.reasonFuzzy!= null  and query.reasonFuzzy!=''">
+				 and  a.reason like concat('%', #{query.reasonFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  a.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  a.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM video_audit_log a <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM video_audit_log a <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.VideoAuditLog">
+		 INSERT INTO video_audit_log
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.auditId != null">
+				 audit_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.auditorId != null">
+				 auditor_id,
+			</if>
+			<if test="bean.fromStatus != null">
+				 from_status,
+			</if>
+			<if test="bean.toStatus != null">
+				 to_status,
+			</if>
+			<if test="bean.reason != null">
+				 reason,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.auditId!=null">
+				 #{bean.auditId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.auditorId!=null">
+				 #{bean.auditorId},
+			</if>
+			<if test="bean.fromStatus!=null">
+				 #{bean.fromStatus},
+			</if>
+			<if test="bean.toStatus!=null">
+				 #{bean.toStatus},
+			</if>
+			<if test="bean.reason!=null">
+				 #{bean.reason},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.VideoAuditLog">
+		 INSERT INTO video_audit_log
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.auditId != null">
+				 audit_id,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.auditorId != null">
+				 auditor_id,
+			</if>
+			<if test="bean.fromStatus != null">
+				 from_status,
+			</if>
+			<if test="bean.toStatus != null">
+				 to_status,
+			</if>
+			<if test="bean.reason != null">
+				 reason,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.auditId!=null">
+				 #{bean.auditId},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.auditorId!=null">
+				 #{bean.auditorId},
+			</if>
+			<if test="bean.fromStatus!=null">
+				 #{bean.fromStatus},
+			</if>
+			<if test="bean.toStatus!=null">
+				 #{bean.toStatus},
+			</if>
+			<if test="bean.reason!=null">
+				 #{bean.reason},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.auditId!=null">
+				 audit_id = VALUES(audit_id),
+			</if>
+			<if test="bean.videoId!=null">
+				 video_id = VALUES(video_id),
+			</if>
+			<if test="bean.auditorId!=null">
+				 auditor_id = VALUES(auditor_id),
+			</if>
+			<if test="bean.fromStatus!=null">
+				 from_status = VALUES(from_status),
+			</if>
+			<if test="bean.toStatus!=null">
+				 to_status = VALUES(to_status),
+			</if>
+			<if test="bean.reason!=null">
+				 reason = VALUES(reason),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.VideoAuditLog">
+		 INSERT INTO video_audit_log(
+			 audit_id,
+			 video_id,
+			 auditor_id,
+			 from_status,
+			 to_status,
+			 reason,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.auditId},
+				 #{item.videoId},
+				 #{item.auditorId},
+				 #{item.fromStatus},
+				 #{item.toStatus},
+				 #{item.reason},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.VideoAuditLog">
+		 INSERT INTO video_audit_log(
+			 audit_id,
+			 video_id,
+			 auditor_id,
+			 from_status,
+			 to_status,
+			 reason,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.auditId},
+				 #{item.videoId},
+				 #{item.auditorId},
+				 #{item.fromStatus},
+				 #{item.toStatus},
+				 #{item.reason},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			audit_id = VALUES(audit_id),
+			video_id = VALUES(video_id),
+			auditor_id = VALUES(auditor_id),
+			from_status = VALUES(from_status),
+			to_status = VALUES(to_status),
+			reason = VALUES(reason),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.VideoAuditLogQuery">
+		 UPDATE video_audit_log a
+ 		 <set>
+			<if test="bean.auditId != null">
+				 audit_id = #{bean.auditId},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.auditorId != null">
+				 auditor_id = #{bean.auditorId},
+			</if>
+			<if test="bean.fromStatus != null">
+				 from_status = #{bean.fromStatus},
+			</if>
+			<if test="bean.toStatus != null">
+				 to_status = #{bean.toStatus},
+			</if>
+			<if test="bean.reason != null">
+				 reason = #{bean.reason},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete a from video_audit_log a
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据AuditId修改-->
+	<update id="updateByAuditId" parameterType="com.machugit.entity.po.VideoAuditLog">
+		 UPDATE video_audit_log
+ 		 <set>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.auditorId != null">
+				 auditor_id = #{bean.auditorId},
+			</if>
+			<if test="bean.fromStatus != null">
+				 from_status = #{bean.fromStatus},
+			</if>
+			<if test="bean.toStatus != null">
+				 to_status = #{bean.toStatus},
+			</if>
+			<if test="bean.reason != null">
+				 reason = #{bean.reason},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where audit_id=#{auditId}
+	</update>
+
+	<!-- 根据AuditId删除-->
+	<delete id="deleteByAuditId">
+		delete from video_audit_log where audit_id=#{auditId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByAuditId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from video_audit_log a where audit_id=#{auditId}
+	</select>
+
+	<!-- 根据VideoId获取对象-->
+	<select id="selectByVideoId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from video_audit_log a where video_id=#{videoId}
+	</select>
+
+</mapper>

@@ -17,7 +17,7 @@ function cover(title, colorA, colorB) {
       <circle cx="774" cy="132" r="96" fill="rgba(255,255,255,0.18)" />
       <circle cx="136" cy="430" r="136" fill="rgba(255,255,255,0.14)" />
       <text x="72" y="260" fill="white" font-size="62" font-family="Arial, sans-serif" font-weight="700">${safeTitle}</text>
-      <text x="72" y="330" fill="rgba(255,255,255,0.82)" font-size="26" font-family="Arial, sans-serif">BilBil demo video</text>
+      <text x="72" y="330" fill="rgba(255,255,255,0.82)" font-size="26" font-family="Arial, sans-serif">VidVault demo video</text>
     </svg>
   `.trim()
 

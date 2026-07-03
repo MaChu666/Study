@@ -39,6 +39,7 @@ public class CommentInfoQuery extends BaseParam {
      * 回复评论id
      */
     private Integer replyCommentId;
+    private Integer root;
 
     /**
      * 图片路径
@@ -125,6 +126,8 @@ public class CommentInfoQuery extends BaseParam {
     public Integer getReplyCommentId(){
         return this.replyCommentId;
     }
+    public void setRoot(Integer root){ this.root = root; }
+    public Integer getRoot(){ return this.root; }
 
     public void setImgPath(String imgPath){
         this.imgPath = imgPath;

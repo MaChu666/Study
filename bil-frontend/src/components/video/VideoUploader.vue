@@ -57,9 +57,16 @@ function formatSize(bytes) {
   return bytes + ' B'
 }
 
+const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024 // 2GB
+
 async function handleFileChange(file) {
   const raw = file.raw
   if (!raw) return
+
+  if (raw.size > MAX_VIDEO_SIZE) {
+    ElMessage.error('视频文件不能超过 2GB')
+    return
+  }
 
   fileName.value = raw.name
   fileSize.value = raw.size
@@ -80,16 +87,18 @@ async function handleFileChange(file) {
       const blob = raw.slice(start, end)
 
       const formData = new FormData()
-      formData.append('chunkFile', blob, raw.name)
+      formData.append('chunkFile', blob, 'chunk_' + i)
       formData.append('chunkIndex', String(i))
       formData.append('uploadId', uploadId)
-      await request.post('/file/uploadVideo', formData)
+      await request.post('/file/uploadVideo', formData, { timeout: 120000 })
 
       progress.value = Math.round(((i + 1) / chunks) * 100)
     }
 
+    await request.post('/file/completeUpload', { uploadId, fileId }, { timeout: 600000 })
+
     uploadedFileId.value = fileId
-    ElMessage.success('视频上传完成')
+    ElMessage.success('视频上传完成，正在转码...')
     emit('uploaded', fileId)
     ignoreRemove = true
     uploadRef.value?.clearFiles()

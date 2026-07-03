@@ -56,7 +56,7 @@ public class AccountController extends ABaseController{
 	@RequestMapping("/register")
 	public ResponseVO register(@NotEmpty @Email @Size(max = 150) String email,
 							   @NotEmpty @Size(max = 20) String useName,
-							   @NotEmpty @Pattern(regexp = Constants.REGEX_PASSWORD) String registerPassword,
+							   @NotEmpty @Size(min = 6, max = 32) String registerPassword,
 							   @NotEmpty String checkCodeKey,
 							   @NotEmpty String checkCode) {
 		try{

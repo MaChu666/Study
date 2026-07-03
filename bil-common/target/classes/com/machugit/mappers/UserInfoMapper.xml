@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.machugit.mappers.UserInfoMapper">
 
@@ -9,6 +9,10 @@
 		<result column="user_id" property="userId"  />
 		<!--昵称-->
 		<result column="use_name" property="useName"  />
+		<!--头像-->
+		<result column="avatar" property="avatar"  />
+		<!--个人背景图-->
+		<result column="banner_image" property="bannerImage"  />
 		<!--邮箱-->
 		<result column="email" property="email"  />
 		<!--密码-->
@@ -27,14 +31,25 @@
 		<result column="last_login_time" property="lastLoginTime"  />
 		<!--最后登录ip-->
 		<result column="last_login_ip" property="lastLoginIp"  />
+		<result column="last_read_time" property="lastReadTime"  />
 		<!--状态（0：封禁 1：正常）-->
 		<result column="status" property="status"  />
+		<!--直播状态（0：离线 1：直播中）-->
+		<result column="live_status" property="liveStatus"  />
 		<!--空间公告-->
 		<result column="notice_info" property="noticeInfo"  />
 		<!--硬币总数-->
 		<result column="total_coin_count" property="totalCoinCount"  />
 		<!--当前硬币数-->
 		<result column="current_coin_count" property="currentCoinCount"  />
+		<!--用户等级（0-6级）-->
+		<result column="level" property="level"  />
+		<!--当前经验值-->
+		<result column="exp" property="exp"  />
+		<!--大会员类型（0：无 1：月度 2：季度 3：年度）-->
+		<result column="vip_type" property="vipType"  />
+		<!--大会员过期时间-->
+		<result column="vip_expire_time" property="vipExpireTime"  />
 		<!--主题-->
 		<result column="theme" property="theme"  />
 	</resultMap>
@@ -42,10 +57,10 @@
 
 	<!-- 通用查询结果列-->
 	<sql id="base_column_list">
-		 u.user_id,u.use_name,u.email,u.password,u.sex,
+		 u.user_id,u.use_name,u.avatar,u.banner_image,u.email,u.password,u.sex,
 		 u.birthday,u.school,u.person_profile,u.join_time,u.last_login_time,
-		 u.last_login_ip,u.status,u.notice_info,u.total_coin_count,u.current_coin_count,
-		 u.theme
+		 u.last_login_ip,u.last_read_time,u.status,u.live_status,u.notice_info,u.total_coin_count,u.current_coin_count,
+		 u.level,u.exp,u.vip_type,u.vip_expire_time,u.theme
 	</sql>
 
 	<sql id="base_condition_filed">
@@ -54,6 +69,12 @@
 			</if>
 			<if test="query.useName != null and query.useName!=''">
 				 and  u.use_name = #{query.useName}
+			</if>
+			<if test="query.avatar != null and query.avatar!=''">
+				 and  u.avatar = #{query.avatar}
+			</if>
+			<if test="query.bannerImage != null and query.bannerImage!=''">
+				 and  u.banner_image = #{query.bannerImage}
 			</if>
 			<if test="query.email != null and query.email!=''">
 				 and  u.email = #{query.email}
@@ -85,6 +106,9 @@
 			<if test="query.status != null">
 				 and  u.status = #{query.status}
 			</if>
+			<if test="query.liveStatus != null">
+				 and  u.live_status = #{query.liveStatus}
+			</if>
 			<if test="query.noticeInfo != null and query.noticeInfo!=''">
 				 and  u.notice_info = #{query.noticeInfo}
 			</if>
@@ -93,6 +117,18 @@
 			</if>
 			<if test="query.currentCoinCount != null">
 				 and  u.current_coin_count = #{query.currentCoinCount}
+			</if>
+			<if test="query.level != null">
+				 and  u.level = #{query.level}
+			</if>
+			<if test="query.exp != null">
+				 and  u.exp = #{query.exp}
+			</if>
+			<if test="query.vipType != null">
+				 and  u.vip_type = #{query.vipType}
+			</if>
+			<if test="query.vipExpireTime != null and query.vipExpireTime!=''">
+				 <![CDATA[ and  u.vip_expire_time=str_to_date(#{query.vipExpireTime}, '%Y-%m-%d') ]]>
 			</if>
 			<if test="query.theme != null">
 				 and  u.theme = #{query.theme}
@@ -108,6 +144,12 @@
 			</if>
 			<if test="query.useNameFuzzy!= null  and query.useNameFuzzy!=''">
 				 and  u.use_name like concat('%', #{query.useNameFuzzy}, '%')
+			</if>
+			<if test="query.avatarFuzzy!= null  and query.avatarFuzzy!=''">
+				 and  u.avatar like concat('%', #{query.avatarFuzzy}, '%')
+			</if>
+			<if test="query.bannerImageFuzzy!= null  and query.bannerImageFuzzy!=''">
+				 and  u.banner_image like concat('%', #{query.bannerImageFuzzy}, '%')
 			</if>
 			<if test="query.emailFuzzy!= null  and query.emailFuzzy!=''">
 				 and  u.email like concat('%', #{query.emailFuzzy}, '%')
@@ -142,6 +184,12 @@
 			<if test="query.noticeInfoFuzzy!= null  and query.noticeInfoFuzzy!=''">
 				 and  u.notice_info like concat('%', #{query.noticeInfoFuzzy}, '%')
 			</if>
+			<if test="query.vipExpireTimeStart!= null and query.vipExpireTimeStart!=''">
+				 <![CDATA[ and  u.vip_expire_time>=str_to_date(#{query.vipExpireTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.vipExpireTimeEnd!= null and query.vipExpireTimeEnd!=''">
+				 <![CDATA[ and  u.vip_expire_time< date_sub(str_to_date(#{query.vipExpireTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
 	 </where>
 	</sql>
 
@@ -171,6 +219,12 @@
 			<if test="bean.useName != null">
 				 use_name,
 			</if>
+			<if test="bean.avatar != null">
+				 avatar,
+			</if>
+			<if test="bean.bannerImage != null">
+				 banner_image,
+			</if>
 			<if test="bean.email != null">
 				 email,
 			</if>
@@ -198,8 +252,14 @@
 			<if test="bean.lastLoginIp != null">
 				 last_login_ip,
 			</if>
+			<if test="bean.lastReadTime != null">
+				 last_read_time,
+			</if>
 			<if test="bean.status != null">
 				 status,
+			</if>
+			<if test="bean.liveStatus != null">
+				 live_status,
 			</if>
 			<if test="bean.noticeInfo != null">
 				 notice_info,
@@ -209,6 +269,18 @@
 			</if>
 			<if test="bean.currentCoinCount != null">
 				 current_coin_count,
+			</if>
+			<if test="bean.level != null">
+				 level,
+			</if>
+			<if test="bean.exp != null">
+				 exp,
+			</if>
+			<if test="bean.vipType != null">
+				 vip_type,
+			</if>
+			<if test="bean.vipExpireTime != null">
+				 vip_expire_time,
 			</if>
 			<if test="bean.theme != null">
 				 theme,
@@ -220,6 +292,12 @@
 			</if>
 			<if test="bean.useName!=null">
 				 #{bean.useName},
+			</if>
+			<if test="bean.avatar!=null">
+				 #{bean.avatar},
+			</if>
+			<if test="bean.bannerImage!=null">
+				 #{bean.bannerImage},
 			</if>
 			<if test="bean.email!=null">
 				 #{bean.email},
@@ -248,8 +326,14 @@
 			<if test="bean.lastLoginIp!=null">
 				 #{bean.lastLoginIp},
 			</if>
+			<if test="bean.lastReadTime!=null">
+				 #{bean.lastReadTime},
+			</if>
 			<if test="bean.status!=null">
 				 #{bean.status},
+			</if>
+			<if test="bean.liveStatus!=null">
+				 #{bean.liveStatus},
 			</if>
 			<if test="bean.noticeInfo!=null">
 				 #{bean.noticeInfo},
@@ -259,6 +343,18 @@
 			</if>
 			<if test="bean.currentCoinCount!=null">
 				 #{bean.currentCoinCount},
+			</if>
+			<if test="bean.level!=null">
+				 #{bean.level},
+			</if>
+			<if test="bean.exp!=null">
+				 #{bean.exp},
+			</if>
+			<if test="bean.vipType!=null">
+				 #{bean.vipType},
+			</if>
+			<if test="bean.vipExpireTime!=null">
+				 #{bean.vipExpireTime},
 			</if>
 			<if test="bean.theme!=null">
 				 #{bean.theme},
@@ -276,6 +372,12 @@
 			<if test="bean.useName != null">
 				 use_name,
 			</if>
+			<if test="bean.avatar != null">
+				 avatar,
+			</if>
+			<if test="bean.bannerImage != null">
+				 banner_image,
+			</if>
 			<if test="bean.email != null">
 				 email,
 			</if>
@@ -303,8 +405,14 @@
 			<if test="bean.lastLoginIp != null">
 				 last_login_ip,
 			</if>
+			<if test="bean.lastReadTime != null">
+				 last_read_time,
+			</if>
 			<if test="bean.status != null">
 				 status,
+			</if>
+			<if test="bean.liveStatus != null">
+				 live_status,
 			</if>
 			<if test="bean.noticeInfo != null">
 				 notice_info,
@@ -314,6 +422,18 @@
 			</if>
 			<if test="bean.currentCoinCount != null">
 				 current_coin_count,
+			</if>
+			<if test="bean.level != null">
+				 level,
+			</if>
+			<if test="bean.exp != null">
+				 exp,
+			</if>
+			<if test="bean.vipType != null">
+				 vip_type,
+			</if>
+			<if test="bean.vipExpireTime != null">
+				 vip_expire_time,
 			</if>
 			<if test="bean.theme != null">
 				 theme,
@@ -325,6 +445,12 @@
 			</if>
 			<if test="bean.useName!=null">
 				 #{bean.useName},
+			</if>
+			<if test="bean.avatar!=null">
+				 #{bean.avatar},
+			</if>
+			<if test="bean.bannerImage!=null">
+				 #{bean.bannerImage},
 			</if>
 			<if test="bean.email!=null">
 				 #{bean.email},
@@ -353,8 +479,14 @@
 			<if test="bean.lastLoginIp!=null">
 				 #{bean.lastLoginIp},
 			</if>
+			<if test="bean.lastReadTime!=null">
+				 #{bean.lastReadTime},
+			</if>
 			<if test="bean.status!=null">
 				 #{bean.status},
+			</if>
+			<if test="bean.liveStatus!=null">
+				 #{bean.liveStatus},
 			</if>
 			<if test="bean.noticeInfo!=null">
 				 #{bean.noticeInfo},
@@ -365,17 +497,35 @@
 			<if test="bean.currentCoinCount!=null">
 				 #{bean.currentCoinCount},
 			</if>
+			<if test="bean.level!=null">
+				 #{bean.level},
+			</if>
+			<if test="bean.exp!=null">
+				 #{bean.exp},
+			</if>
+			<if test="bean.vipType!=null">
+				 #{bean.vipType},
+			</if>
+			<if test="bean.vipExpireTime!=null">
+				 #{bean.vipExpireTime},
+			</if>
 			<if test="bean.theme!=null">
 				 #{bean.theme},
 			</if>
 		 </trim>
-		 on DUPLICATE key update 
+		 on DUPLICATE key update
 		 <trim prefix="" suffix="" suffixOverrides=",">
 			<if test="bean.userId!=null">
 				 user_id = VALUES(user_id),
 			</if>
 			<if test="bean.useName!=null">
 				 use_name = VALUES(use_name),
+			</if>
+			<if test="bean.avatar!=null">
+				 avatar = VALUES(avatar),
+			</if>
+			<if test="bean.bannerImage!=null">
+				 banner_image = VALUES(banner_image),
 			</if>
 			<if test="bean.email!=null">
 				 email = VALUES(email),
@@ -407,6 +557,9 @@
 			<if test="bean.status!=null">
 				 status = VALUES(status),
 			</if>
+			<if test="bean.liveStatus!=null">
+				 live_status = VALUES(live_status),
+			</if>
 			<if test="bean.noticeInfo!=null">
 				 notice_info = VALUES(notice_info),
 			</if>
@@ -415,6 +568,18 @@
 			</if>
 			<if test="bean.currentCoinCount!=null">
 				 current_coin_count = VALUES(current_coin_count),
+			</if>
+			<if test="bean.level!=null">
+				 level = VALUES(level),
+			</if>
+			<if test="bean.exp!=null">
+				 exp = VALUES(exp),
+			</if>
+			<if test="bean.vipType!=null">
+				 vip_type = VALUES(vip_type),
+			</if>
+			<if test="bean.vipExpireTime!=null">
+				 vip_expire_time = VALUES(vip_expire_time),
 			</if>
 			<if test="bean.theme!=null">
 				 theme = VALUES(theme),
@@ -427,6 +592,8 @@
 		 INSERT INTO user_info(
 			 user_id,
 			 use_name,
+			 avatar,
+			 banner_image,
 			 email,
 			 password,
 			 sex,
@@ -437,15 +604,22 @@
 			 last_login_time,
 			 last_login_ip,
 			 status,
+			 live_status,
 			 notice_info,
 			 total_coin_count,
 			 current_coin_count,
+			 level,
+			 exp,
+			 vip_type,
+			 vip_expire_time,
 			 theme
 		 )values
 		 <foreach collection="list" item="item" separator=",">
 			 (
 				 #{item.userId},
 				 #{item.useName},
+				 #{item.avatar},
+				 #{item.bannerImage},
 				 #{item.email},
 				 #{item.password},
 				 #{item.sex},
@@ -456,9 +630,14 @@
 				 #{item.lastLoginTime},
 				 #{item.lastLoginIp},
 				 #{item.status},
+				 #{item.liveStatus},
 				 #{item.noticeInfo},
 				 #{item.totalCoinCount},
 				 #{item.currentCoinCount},
+				 #{item.level},
+				 #{item.exp},
+				 #{item.vipType},
+				 #{item.vipExpireTime},
 				 #{item.theme}
 			 )
 		 </foreach>
@@ -469,6 +648,8 @@
 		 INSERT INTO user_info(
 			 user_id,
 			 use_name,
+			 avatar,
+			 banner_image,
 			 email,
 			 password,
 			 sex,
@@ -479,15 +660,22 @@
 			 last_login_time,
 			 last_login_ip,
 			 status,
+			 live_status,
 			 notice_info,
 			 total_coin_count,
 			 current_coin_count,
+			 level,
+			 exp,
+			 vip_type,
+			 vip_expire_time,
 			 theme
 		 )values
 		 <foreach collection="list" item="item" separator=",">
 			 (
 				 #{item.userId},
 				 #{item.useName},
+				 #{item.avatar},
+				 #{item.bannerImage},
 				 #{item.email},
 				 #{item.password},
 				 #{item.sex},
@@ -498,15 +686,22 @@
 				 #{item.lastLoginTime},
 				 #{item.lastLoginIp},
 				 #{item.status},
+				 #{item.liveStatus},
 				 #{item.noticeInfo},
 				 #{item.totalCoinCount},
 				 #{item.currentCoinCount},
+				 #{item.level},
+				 #{item.exp},
+				 #{item.vipType},
+				 #{item.vipExpireTime},
 				 #{item.theme}
 			 )
 		 </foreach>
-			on DUPLICATE key update 
+			on DUPLICATE key update
 			user_id = VALUES(user_id),
 			use_name = VALUES(use_name),
+			avatar = VALUES(avatar),
+			banner_image = VALUES(banner_image),
 			email = VALUES(email),
 			password = VALUES(password),
 			sex = VALUES(sex),
@@ -517,21 +712,32 @@
 			last_login_time = VALUES(last_login_time),
 			last_login_ip = VALUES(last_login_ip),
 			status = VALUES(status),
+			live_status = VALUES(live_status),
 			notice_info = VALUES(notice_info),
 			total_coin_count = VALUES(total_coin_count),
 			current_coin_count = VALUES(current_coin_count),
+			level = VALUES(level),
+			exp = VALUES(exp),
+			vip_type = VALUES(vip_type),
+			vip_expire_time = VALUES(vip_expire_time),
 			theme = VALUES(theme)
 	</insert>
 
 	<!--多条件修改-->
 	<update id="updateByParam" parameterType="com.machugit.entity.query.UserInfoQuery">
 		 UPDATE user_info u
- 		 <set> 
+ 		 <set>
 			<if test="bean.userId != null">
 				 user_id = #{bean.userId},
 			</if>
 			<if test="bean.useName != null">
 				 use_name = #{bean.useName},
+			</if>
+			<if test="bean.avatar != null">
+				 avatar = #{bean.avatar},
+			</if>
+			<if test="bean.bannerImage != null">
+				 banner_image = #{bean.bannerImage},
 			</if>
 			<if test="bean.email != null">
 				 email = #{bean.email},
@@ -560,8 +766,14 @@
 			<if test="bean.lastLoginIp != null">
 				 last_login_ip = #{bean.lastLoginIp},
 			</if>
+			<if test="bean.lastReadTime != null">
+				 last_read_time = #{bean.lastReadTime},
+			</if>
 			<if test="bean.status != null">
 				 status = #{bean.status},
+			</if>
+			<if test="bean.liveStatus != null">
+				 live_status = #{bean.liveStatus},
 			</if>
 			<if test="bean.noticeInfo != null">
 				 notice_info = #{bean.noticeInfo},
@@ -571,6 +783,18 @@
 			</if>
 			<if test="bean.currentCoinCount != null">
 				 current_coin_count = #{bean.currentCoinCount},
+			</if>
+			<if test="bean.level != null">
+				 level = #{bean.level},
+			</if>
+			<if test="bean.exp != null">
+				 exp = #{bean.exp},
+			</if>
+			<if test="bean.vipType != null">
+				 vip_type = #{bean.vipType},
+			</if>
+			<if test="bean.vipExpireTime != null">
+				 vip_expire_time = #{bean.vipExpireTime},
 			</if>
 			<if test="bean.theme != null">
 				 theme = #{bean.theme},
@@ -588,9 +812,15 @@
 	<!-- 根据UserId修改-->
 	<update id="updateByUserId" parameterType="com.machugit.entity.po.UserInfo">
 		 UPDATE user_info
- 		 <set> 
+ 		 <set>
 			<if test="bean.useName != null">
 				 use_name = #{bean.useName},
+			</if>
+			<if test="bean.avatar != null">
+				 avatar = #{bean.avatar},
+			</if>
+			<if test="bean.bannerImage != null">
+				 banner_image = #{bean.bannerImage},
 			</if>
 			<if test="bean.email != null">
 				 email = #{bean.email},
@@ -619,8 +849,14 @@
 			<if test="bean.lastLoginIp != null">
 				 last_login_ip = #{bean.lastLoginIp},
 			</if>
+			<if test="bean.lastReadTime != null">
+				 last_read_time = #{bean.lastReadTime},
+			</if>
 			<if test="bean.status != null">
 				 status = #{bean.status},
+			</if>
+			<if test="bean.liveStatus != null">
+				 live_status = #{bean.liveStatus},
 			</if>
 			<if test="bean.noticeInfo != null">
 				 notice_info = #{bean.noticeInfo},
@@ -630,6 +866,18 @@
 			</if>
 			<if test="bean.currentCoinCount != null">
 				 current_coin_count = #{bean.currentCoinCount},
+			</if>
+			<if test="bean.level != null">
+				 level = #{bean.level},
+			</if>
+			<if test="bean.exp != null">
+				 exp = #{bean.exp},
+			</if>
+			<if test="bean.vipType != null">
+				 vip_type = #{bean.vipType},
+			</if>
+			<if test="bean.vipExpireTime != null">
+				 vip_expire_time = #{bean.vipExpireTime},
 			</if>
 			<if test="bean.theme != null">
 				 theme = #{bean.theme},
@@ -651,9 +899,15 @@
 	<!-- 根据UseName修改-->
 	<update id="updateByUseName" parameterType="com.machugit.entity.po.UserInfo">
 		 UPDATE user_info
- 		 <set> 
+ 		 <set>
 			<if test="bean.userId != null">
 				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.avatar != null">
+				 avatar = #{bean.avatar},
+			</if>
+			<if test="bean.bannerImage != null">
+				 banner_image = #{bean.bannerImage},
 			</if>
 			<if test="bean.email != null">
 				 email = #{bean.email},
@@ -682,8 +936,14 @@
 			<if test="bean.lastLoginIp != null">
 				 last_login_ip = #{bean.lastLoginIp},
 			</if>
+			<if test="bean.lastReadTime != null">
+				 last_read_time = #{bean.lastReadTime},
+			</if>
 			<if test="bean.status != null">
 				 status = #{bean.status},
+			</if>
+			<if test="bean.liveStatus != null">
+				 live_status = #{bean.liveStatus},
 			</if>
 			<if test="bean.noticeInfo != null">
 				 notice_info = #{bean.noticeInfo},
@@ -693,6 +953,18 @@
 			</if>
 			<if test="bean.currentCoinCount != null">
 				 current_coin_count = #{bean.currentCoinCount},
+			</if>
+			<if test="bean.level != null">
+				 level = #{bean.level},
+			</if>
+			<if test="bean.exp != null">
+				 exp = #{bean.exp},
+			</if>
+			<if test="bean.vipType != null">
+				 vip_type = #{bean.vipType},
+			</if>
+			<if test="bean.vipExpireTime != null">
+				 vip_expire_time = #{bean.vipExpireTime},
 			</if>
 			<if test="bean.theme != null">
 				 theme = #{bean.theme},
@@ -714,12 +986,18 @@
 	<!-- 根据Email修改-->
 	<update id="updateByEmail" parameterType="com.machugit.entity.po.UserInfo">
 		 UPDATE user_info
- 		 <set> 
+ 		 <set>
 			<if test="bean.userId != null">
 				 user_id = #{bean.userId},
 			</if>
 			<if test="bean.useName != null">
 				 use_name = #{bean.useName},
+			</if>
+			<if test="bean.avatar != null">
+				 avatar = #{bean.avatar},
+			</if>
+			<if test="bean.bannerImage != null">
+				 banner_image = #{bean.bannerImage},
 			</if>
 			<if test="bean.password != null">
 				 password = #{bean.password},
@@ -745,8 +1023,14 @@
 			<if test="bean.lastLoginIp != null">
 				 last_login_ip = #{bean.lastLoginIp},
 			</if>
+			<if test="bean.lastReadTime != null">
+				 last_read_time = #{bean.lastReadTime},
+			</if>
 			<if test="bean.status != null">
 				 status = #{bean.status},
+			</if>
+			<if test="bean.liveStatus != null">
+				 live_status = #{bean.liveStatus},
 			</if>
 			<if test="bean.noticeInfo != null">
 				 notice_info = #{bean.noticeInfo},
@@ -756,6 +1040,18 @@
 			</if>
 			<if test="bean.currentCoinCount != null">
 				 current_coin_count = #{bean.currentCoinCount},
+			</if>
+			<if test="bean.level != null">
+				 level = #{bean.level},
+			</if>
+			<if test="bean.exp != null">
+				 exp = #{bean.exp},
+			</if>
+			<if test="bean.vipType != null">
+				 vip_type = #{bean.vipType},
+			</if>
+			<if test="bean.vipExpireTime != null">
+				 vip_expire_time = #{bean.vipExpireTime},
 			</if>
 			<if test="bean.theme != null">
 				 theme = #{bean.theme},

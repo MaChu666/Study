@@ -35,4 +35,14 @@ public interface MessageInfoService {
      * 全部已读
      */
     void readAll(String userId);
+
+    /**
+     * 发送私信
+     */
+    void sendPrivateMessage(String senderId, String targetUserId, String content);
+
+    /**
+     * 加载与指定用户的私信列表
+     */
+    List<MessageInfo> loadPrivateMessages(String userId, String targetUserId);
 }

@@ -42,6 +42,11 @@ public class CommentInfo implements Serializable {
     private Integer replyCommentId;
 
     /**
+     * 根评论id（0表示自身是根评论）
+     */
+    private Integer root;
+
+    /**
      * 图片路径
      */
     private String imgPath;
@@ -98,6 +103,10 @@ public class CommentInfo implements Serializable {
     public Integer getReplyCommentId(){
         return this.replyCommentId;
     }
+
+    public void setRoot(Integer root){ this.root = root; }
+
+    public Integer getRoot(){ return this.root; }
 
     public void setImgPath(String imgPath){
         this.imgPath = imgPath;

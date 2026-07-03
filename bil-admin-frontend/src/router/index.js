@@ -17,6 +17,7 @@ const routes = [
       { path: 'video', name: 'video', component: () => import('@/views/VideoView.vue') },
       { path: 'interact', name: 'interact', component: () => import('@/views/InteractView.vue') },
       { path: 'user', name: 'user', component: () => import('@/views/UserView.vue') },
+      { path: 'banner', name: 'banner', component: () => import('@/views/BannerView.vue') },
       { path: 'setting', name: 'setting', component: () => import('@/views/SettingView.vue') }
     ]
   }

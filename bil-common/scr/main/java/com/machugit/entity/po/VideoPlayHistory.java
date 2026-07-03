@@ -37,6 +37,15 @@ public class VideoPlayHistory implements Serializable {
     private String fileId;
 
     /**
+     * 上次观看到第几秒
+     */
+    private Integer progressSeconds;
+    /**
+     * 是否看完（0：未 1：已看完）
+     */
+    private Integer isFinished;
+
+    /**
      * 更新时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -76,6 +85,22 @@ public class VideoPlayHistory implements Serializable {
         return this.fileId;
     }
 
+    public void setProgressSeconds(Integer progressSeconds){
+        this.progressSeconds = progressSeconds;
+    }
+
+    public Integer getProgressSeconds(){
+        return this.progressSeconds;
+    }
+
+    public void setIsFinished(Integer isFinished){
+        this.isFinished = isFinished;
+    }
+
+    public Integer getIsFinished(){
+        return this.isFinished;
+    }
+
     public void setUpdateTime(Date updateTime){
         this.updateTime = updateTime;
     }
@@ -86,6 +111,6 @@ public class VideoPlayHistory implements Serializable {
 
     @Override
     public String toString (){
-        return "历史记录id:"+(historyId == null ? "空" : historyId)+"，视频id:"+(videoId == null ? "空" : videoId)+"，用户id:"+(userId == null ? "空" : userId)+"，文件id:"+(fileId == null ? "空" : fileId)+"，更新时间:"+(updateTime == null ? "空" : DateUtil.format(updateTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
+        return "历史记录id:"+(historyId == null ? "空" : historyId)+"，视频id:"+(videoId == null ? "空" : videoId)+"，用户id:"+(userId == null ? "空" : userId)+"，文件id:"+(fileId == null ? "空" : fileId)+"，上次观看到第几秒:"+(progressSeconds == null ? "空" : progressSeconds)+"，是否看完（0：未 1：已看完）:"+(isFinished == null ? "空" : isFinished)+"，更新时间:"+(updateTime == null ? "空" : DateUtil.format(updateTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
     }
 }

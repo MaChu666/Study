@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 const THEME_KEY = 'bil-theme'
 
 function applyThemeMode(mode) {
-  document.documentElement.classList.toggle('theme-dark', mode === 'dark')
+  document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light')
 }
 
 export const useThemeStore = defineStore('theme', {

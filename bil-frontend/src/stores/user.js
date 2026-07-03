@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { autoLoginApi, loginApi, logoutApi, registerApi } from '@/api/modules/account'
+import { autoLoginApi, loginApi, logoutApi, registerApi, getNoReadCountApi } from '@/api/modules/account'
 import { clearToken, getToken, setToken } from '@/utils/token'
 import { eventBus } from '@/utils/eventBus'
 
@@ -8,6 +8,7 @@ export const useUserStore = defineStore('user', {
     token: getToken(),
     profile: null,
     notificationDot: false,
+    unreadCount: 0,
     loginDialogVisible: false
   }),
   getters: {
@@ -45,6 +46,21 @@ export const useUserStore = defineStore('user', {
       this.token = ''
       clearToken()
       eventBus.emit('auth:changed', null)
+    },
+    async fetchUnreadCount() {
+      if (!this.isLogin) {
+        this.notificationDot = false
+        this.unreadCount = 0
+        return
+      }
+      try {
+        const count = await getNoReadCountApi()
+        this.unreadCount = Number(count) || 0
+        this.notificationDot = this.unreadCount > 0
+      } catch {
+        this.notificationDot = false
+        this.unreadCount = 0
+      }
     },
     openLoginDialog() {
       this.loginDialogVisible = true

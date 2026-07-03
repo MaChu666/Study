@@ -40,7 +40,7 @@
 import { Loading } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { uploadImageApi } from '@/api/modules/file'
+import request from '@/api/request'
 
 const emit = defineEmits(['uploaded', 'removed'])
 
@@ -51,9 +51,15 @@ const previewUrl = ref('')
 const uploadedFileId = ref('')
 let dragCounter = 0
 
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
+
 async function processFile(file) {
   if (!file.type.startsWith('image/')) {
     ElMessage.warning('请选择图片文件')
+    return
+  }
+  if (file.size > MAX_IMAGE_SIZE) {
+    ElMessage.error('图片不能超过 10MB')
     return
   }
 
@@ -63,13 +69,13 @@ async function processFile(file) {
     uploading.value = true
 
     try {
-      const result = await uploadImageApi({
-        file: e.target.result,
-        createThumbnail: 'false'
-      })
-      uploadedFileId.value = result.fileId
+      const formData = new FormData()
+      formData.append('file', e.target.result)
+      formData.append('createThumbnail', 'false')
+      const res = await request.post('/file/uploadImage', formData, { timeout: 120000 })
+      uploadedFileId.value = res.fileId
       ElMessage.success('封面上传成功')
-      emit('uploaded', result.fileId)
+      emit('uploaded', res.filePath || res.fileId)
     } catch {
       previewUrl.value = ''
       ElMessage.error('封面上传失败')
@@ -161,13 +167,14 @@ defineExpose({ reset })
 
 .hint {
   font-size: 12px !important;
-  color: #bbb;
+  color: var(--bil-muted);
+  opacity: 0.7;
 }
 
 .upload-icon {
   font-size: 32px;
   font-weight: 200;
-  color: #ccc;
+  color: var(--bil-muted);
   line-height: 1;
 }
 

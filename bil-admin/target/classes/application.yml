@@ -5,8 +5,8 @@ server:
 spring:
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 15MB
+      max-file-size: 2GB
+      max-request-size: 2GB
   application:
     name: bil-admin
   datasource:
@@ -41,6 +41,9 @@ mybatis:
 
 project:
   folder: d:/BilBil/biladmin
+  video:
+    upload-temp: d:/BilBil/bilweb/temp
+    output: d:/BilBil/bilweb/videos
 log:
   root:
     level: debug

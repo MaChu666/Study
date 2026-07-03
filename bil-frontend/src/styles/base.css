@@ -9,6 +9,7 @@ body {
   color: var(--bil-text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 a {

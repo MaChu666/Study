@@ -31,8 +31,17 @@ VALUES
 ('BV1gG4y1X3kR', '/cover/default.png', '王者荣耀 精彩操作合集', 3, 3, 1, '王者荣耀,游戏,集锦', '峡谷最强操作，不服来战！', '弹幕开启', '5896561791', 55000, 7800, 3500, 620, 2000, 800, 1, '2026-06-10 20:00:00'),
 ('BV1hH4y1X4lS', '/cover/default.png', '周杰伦 晴天 翻唱', 2, 2, 1, '音乐,翻唱,周杰伦', '晴天钢琴弹唱，希望能给你带来好心情~', '弹幕开启，评论开启', '2345678901', 8200, 650, 320, 45, 150, 70, 1, '2026-06-15 16:00:00'),
 ('BV1iI4y1X5mT', '/cover/default.png', '篮球教学：三步上篮', 6, 6, 1, '篮球,体育,教学', '零基础学篮球，从三步上篮开始！', '评论开启', '3456789012', 6200, 480, 200, 35, 120, 50, 1, '2026-06-18 08:00:00'),
-('BV1jJ4y1X6nU', '/cover/default.png', '红海行动 无删减版', 8, 8, 2, '电影,红海行动,动作', '经典国产动作片，值得重温！', '弹幕开启', '1234567890', 32000, 4200, 1800, 350, 1000, 450, 0, '2026-06-20 22:00:00')
+('BV1jJ4y1X6nU', '/cover/default.png', '红海行动 无删减版', 8, 8, 2, '电影,红海行动,动作', '经典国产动作片，值得重温！', '弹幕开启', '1234567890', 32000, 4200, 1800, 350, 1000, 450, 0, '2026-06-20 22:00:00'),
+('BV1kK4y1X7oV', '/cover/default.png', '火影忍者 经典战役回顾', 1, 1, 1, '火影忍者,动画,经典', '重温那些年感动我们的战斗名场面！', '弹幕开启，评论开启', '1234567890', 28000, 3500, 1600, 280, 900, 400, 1, '2026-03-10 10:00:00'),
+('BV1lL4y1X8pW', '/cover/default.png', '琅琊榜 精彩片段', 9, 9, 2, '琅琊榜,电视剧,古装', '胡歌主演经典权谋剧，每集都是教科书般的演技。', '评论开启', '2345678901', 35000, 4500, 2100, 390, 1200, 500, 1, '2026-04-05 20:00:00')
 ON DUPLICATE KEY UPDATE `video_name`=VALUES(`video_name`);
+
+-- Add corresponding file records
+INSERT INTO `video_info_file` (`file_id`, `upload_id`, `user_id`, `video_id`, `file_name`, `file_path`, `file_size`, `duration`, `status`, `create_time`)
+VALUES
+('f011', 'upload_011', '1234567890', 'BV1kK4y1X7oV', 'naruto_classic.mp4', '/videos/BV1kK4y1X7oV/index.m3u8', 629145600, 2400, 2, '2026-03-10 10:00:00'),
+('f012', 'upload_012', '2345678901', 'BV1lL4y1X8pW', 'langya_bang.mp4', '/videos/BV1lL4y1X8pW/index.m3u8', 734003200, 3000, 2, '2026-04-05 20:00:00')
+ON DUPLICATE KEY UPDATE `file_name`=VALUES(`file_name`);
 
 -- =============================================
 -- 视频文件数据（每个视频一个 m3u8 文件）
@@ -173,4 +182,43 @@ VALUES
 (2, 1, 'BV1bB4y1X8fL', 2),
 (3, 1, 'BV1dD4y1X0hN', 3),
 (4, 2, 'BV1iI4y1X5mT', 1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);
+
+-- =============================================
+-- 首页轮播图
+-- =============================================
+INSERT INTO `banner_config` (`banner_id`, `title`, `image_url`, `link_type`, `link_value`, `sort`, `status`, `start_time`, `end_time`)
+VALUES
+(1, 'Spring Boot 从入门到精通', 'https://picsum.photos/seed/spring/1200/400', 1, 'BV1aA4y1X7eK', 1, 1, '2026-01-01 00:00:00', '2027-01-01 00:00:00'),
+(2, 'Vue3 实战教程', 'https://picsum.photos/seed/vue3/1200/400', 1, 'BV1bB4y1X8fL', 2, 1, '2026-01-01 00:00:00', '2027-01-01 00:00:00'),
+(3, '最美城市风光 4K', 'https://picsum.photos/seed/city/1200/400', 1, 'BV1cC4y1X9gM', 3, 1, '2026-01-01 00:00:00', '2027-01-01 00:00:00'),
+(4, '王者荣耀精彩操作', 'https://picsum.photos/seed/game/1200/400', 1, 'BV1gG4y1X3kR', 4, 1, '2026-01-01 00:00:00', '2027-01-01 00:00:00')
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`);
+
+-- =============================================
+-- 签到记录
+-- =============================================
+INSERT INTO `user_sign_in` (`sign_id`, `user_id`, `sign_date`, `continuous_days`, `create_time`)
+VALUES
+(1, '5896561791', CURDATE(), 7, NOW())
+ON DUPLICATE KEY UPDATE `continuous_days`=VALUES(`continuous_days`);
+
+-- =============================================
+-- 收藏夹
+-- =============================================
+INSERT INTO `favorite_folder` (`folder_id`, `user_id`, `folder_name`, `description`, `type`, `video_count`, `sort`)
+VALUES
+(1, '5896561791', '教程合集', '收藏的编程教程', 0, 3, 1),
+(2, '5896561791', '必看神作', '值得反复观看的视频', 1, 1, 2),
+(3, '1234567890', '默认收藏夹', '我的收藏', 0, 2, 1)
+ON DUPLICATE KEY UPDATE `folder_id`=VALUES(`folder_id`);
+
+INSERT INTO `favorite_video` (`id`, `folder_id`, `user_id`, `video_id`)
+VALUES
+(1, 1, '5896561791', 'BV1aA4y1X7eK'),
+(2, 1, '5896561791', 'BV1bB4y1X8fL'),
+(3, 1, '5896561791', 'BV1dD4y1X0hN'),
+(4, 2, '5896561791', 'BV1cC4y1X9gM'),
+(5, 3, '1234567890', 'BV1aA4y1X7eK'),
+(6, 3, '1234567890', 'BV1eE4y1X1iP')
 ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);

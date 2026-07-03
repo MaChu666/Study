@@ -24,6 +24,20 @@ public class UserInfoQuery extends BaseParam {
 	private String useNameFuzzy;
 
 	/**
+	 * 头像
+	 */
+	private String avatar;
+
+	private String avatarFuzzy;
+
+	/**
+	 * 个人背景图
+	 */
+	private String bannerImage;
+
+	private String bannerImageFuzzy;
+
+	/**
 	 * 邮箱
 	 */
 	private String email;
@@ -111,6 +125,35 @@ public class UserInfoQuery extends BaseParam {
 	private Integer currentCoinCount;
 
 	/**
+	 * 用户等级（0-6级）
+	 */
+	private Integer level;
+
+	/**
+	 * 当前经验值
+	 */
+	private Integer exp;
+
+	/**
+	 * 大会员类型（0：无 1：月度 2：季度 3：年度）
+	 */
+	private Integer vipType;
+
+	/**
+	 * 大会员过期时间
+	 */
+	private String vipExpireTime;
+
+	private String vipExpireTimeStart;
+
+	private String vipExpireTimeEnd;
+
+	/**
+	 * 直播状态（0：离线 1：直播中）
+	 */
+	private Integer liveStatus;
+
+	/**
 	 * 主题
 	 */
 	private Integer theme;
@@ -146,6 +189,38 @@ public class UserInfoQuery extends BaseParam {
 
 	public String getUseNameFuzzy(){
 		return this.useNameFuzzy;
+	}
+
+	public void setAvatar(String avatar){
+		this.avatar = avatar;
+	}
+
+	public String getAvatar(){
+		return this.avatar;
+	}
+
+	public void setAvatarFuzzy(String avatarFuzzy){
+		this.avatarFuzzy = avatarFuzzy;
+	}
+
+	public String getAvatarFuzzy(){
+		return this.avatarFuzzy;
+	}
+
+	public void setBannerImage(String bannerImage){
+		this.bannerImage = bannerImage;
+	}
+
+	public String getBannerImage(){
+		return this.bannerImage;
+	}
+
+	public void setBannerImageFuzzy(String bannerImageFuzzy){
+		this.bannerImageFuzzy = bannerImageFuzzy;
+	}
+
+	public String getBannerImageFuzzy(){
+		return this.bannerImageFuzzy;
 	}
 
 	public void setEmail(String email){
@@ -336,6 +411,62 @@ public class UserInfoQuery extends BaseParam {
 
 	public Integer getCurrentCoinCount(){
 		return this.currentCoinCount;
+	}
+
+	public void setLevel(Integer level){
+		this.level = level;
+	}
+
+	public Integer getLevel(){
+		return this.level;
+	}
+
+	public void setExp(Integer exp){
+		this.exp = exp;
+	}
+
+	public Integer getExp(){
+		return this.exp;
+	}
+
+	public void setVipType(Integer vipType){
+		this.vipType = vipType;
+	}
+
+	public Integer getVipType(){
+		return this.vipType;
+	}
+
+	public void setVipExpireTime(String vipExpireTime){
+		this.vipExpireTime = vipExpireTime;
+	}
+
+	public String getVipExpireTime(){
+		return this.vipExpireTime;
+	}
+
+	public void setVipExpireTimeStart(String vipExpireTimeStart){
+		this.vipExpireTimeStart = vipExpireTimeStart;
+	}
+
+	public String getVipExpireTimeStart(){
+		return this.vipExpireTimeStart;
+	}
+
+	public void setVipExpireTimeEnd(String vipExpireTimeEnd){
+		this.vipExpireTimeEnd = vipExpireTimeEnd;
+	}
+
+	public String getVipExpireTimeEnd(){
+		return this.vipExpireTimeEnd;
+	}
+
+	public void setLiveStatus(Integer liveStatus){
+		this.liveStatus = liveStatus;
+	}
+
+	public Integer getLiveStatus(){
+		return this.liveStatus;
 	}
 
 	public void setTheme(Integer theme){

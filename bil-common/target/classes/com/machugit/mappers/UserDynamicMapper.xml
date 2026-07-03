@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.UserDynamicMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.UserDynamic">
+		<!--动态id-->
+		<result column="dynamic_id" property="dynamicId"  />
+		<!--用户id-->
+		<result column="user_id" property="userId"  />
+		<!--动态类型-->
+		<result column="dynamic_type" property="dynamicType"  />
+		<!--内容-->
+		<result column="content" property="content"  />
+		<!--图片-->
+		<result column="images" property="images"  />
+		<!--视频id-->
+		<result column="video_id" property="videoId"  />
+		<!--转发id-->
+		<result column="forward_id" property="forwardId"  />
+		<!--转发数-->
+		<result column="forward_count" property="forwardCount"  />
+		<!--点赞数-->
+		<result column="like_count" property="likeCount"  />
+		<!--评论数-->
+		<result column="comment_count" property="commentCount"  />
+		<!--状态-->
+		<result column="status" property="status"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+		<!--更新时间-->
+		<result column="update_time" property="updateTime"  />
+		<result column="user_name" property="userName"  />
+		<result column="user_avatar" property="userAvatar"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 d.dynamic_id,d.user_id,d.dynamic_type,d.content,d.images,
+		 d.video_id,d.forward_id,d.forward_count,d.like_count,d.comment_count,
+		 d.status,d.create_time,d.update_time,
+			 u.use_name as user_name, u.avatar as user_avatar
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.dynamicId != null">
+				 and  d.dynamic_id = #{query.dynamicId}
+			</if>
+			<if test="query.userId != null and query.userId!=''">
+				 and  d.user_id = #{query.userId}
+			</if>
+			<if test="query.dynamicType != null">
+				 and  d.dynamic_type = #{query.dynamicType}
+			</if>
+			<if test="query.content != null and query.content!=''">
+				 and  d.content = #{query.content}
+			</if>
+			<if test="query.images != null and query.images!=''">
+				 and  d.images = #{query.images}
+			</if>
+			<if test="query.videoId != null and query.videoId!=''">
+				 and  d.video_id = #{query.videoId}
+			</if>
+			<if test="query.forwardId != null">
+				 and  d.forward_id = #{query.forwardId}
+			</if>
+			<if test="query.forwardCount != null">
+				 and  d.forward_count = #{query.forwardCount}
+			</if>
+			<if test="query.likeCount != null">
+				 and  d.like_count = #{query.likeCount}
+			</if>
+			<if test="query.commentCount != null">
+				 and  d.comment_count = #{query.commentCount}
+			</if>
+			<if test="query.status != null">
+				 and  d.status = #{query.status}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  d.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTime != null and query.updateTime!=''">
+				 <![CDATA[ and  d.update_time=str_to_date(#{query.updateTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+				 and  d.content like concat('%', #{query.contentFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  d.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  d.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.updateTimeStart!= null and query.updateTimeStart!=''">
+				 <![CDATA[ and  d.update_time>=str_to_date(#{query.updateTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTimeEnd!= null and query.updateTimeEnd!=''">
+				 <![CDATA[ and  d.update_time< date_sub(str_to_date(#{query.updateTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM user_dynamic d LEFT JOIN user_info u ON d.user_id = u.user_id <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM user_dynamic d LEFT JOIN user_info u ON d.user_id = u.user_id <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.UserDynamic">
+		 INSERT INTO user_dynamic
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.dynamicId != null">
+				 dynamic_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.dynamicType != null">
+				 dynamic_type,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.images != null">
+				 images,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.forwardId != null">
+				 forward_id,
+			</if>
+			<if test="bean.forwardCount != null">
+				 forward_count,
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count,
+			</if>
+			<if test="bean.commentCount != null">
+				 comment_count,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.dynamicId!=null">
+				 #{bean.dynamicId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.dynamicType!=null">
+				 #{bean.dynamicType},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.images!=null">
+				 #{bean.images},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.forwardId!=null">
+				 #{bean.forwardId},
+			</if>
+			<if test="bean.forwardCount!=null">
+				 #{bean.forwardCount},
+			</if>
+			<if test="bean.likeCount!=null">
+				 #{bean.likeCount},
+			</if>
+			<if test="bean.commentCount!=null">
+				 #{bean.commentCount},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.UserDynamic">
+		 INSERT INTO user_dynamic
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.dynamicId != null">
+				 dynamic_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.dynamicType != null">
+				 dynamic_type,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.images != null">
+				 images,
+			</if>
+			<if test="bean.videoId != null">
+				 video_id,
+			</if>
+			<if test="bean.forwardId != null">
+				 forward_id,
+			</if>
+			<if test="bean.forwardCount != null">
+				 forward_count,
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count,
+			</if>
+			<if test="bean.commentCount != null">
+				 comment_count,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.dynamicId!=null">
+				 #{bean.dynamicId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.dynamicType!=null">
+				 #{bean.dynamicType},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.images!=null">
+				 #{bean.images},
+			</if>
+			<if test="bean.videoId!=null">
+				 #{bean.videoId},
+			</if>
+			<if test="bean.forwardId!=null">
+				 #{bean.forwardId},
+			</if>
+			<if test="bean.forwardCount!=null">
+				 #{bean.forwardCount},
+			</if>
+			<if test="bean.likeCount!=null">
+				 #{bean.likeCount},
+			</if>
+			<if test="bean.commentCount!=null">
+				 #{bean.commentCount},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.dynamicId!=null">
+				 dynamic_id = VALUES(dynamic_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.dynamicType!=null">
+				 dynamic_type = VALUES(dynamic_type),
+			</if>
+			<if test="bean.content!=null">
+				 content = VALUES(content),
+			</if>
+			<if test="bean.images!=null">
+				 images = VALUES(images),
+			</if>
+			<if test="bean.videoId!=null">
+				 video_id = VALUES(video_id),
+			</if>
+			<if test="bean.forwardId!=null">
+				 forward_id = VALUES(forward_id),
+			</if>
+			<if test="bean.forwardCount!=null">
+				 forward_count = VALUES(forward_count),
+			</if>
+			<if test="bean.likeCount!=null">
+				 like_count = VALUES(like_count),
+			</if>
+			<if test="bean.commentCount!=null">
+				 comment_count = VALUES(comment_count),
+			</if>
+			<if test="bean.status!=null">
+				 status = VALUES(status),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+			<if test="bean.updateTime!=null">
+				 update_time = VALUES(update_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.UserDynamic">
+		 INSERT INTO user_dynamic(
+			 dynamic_id,
+			 user_id,
+			 dynamic_type,
+			 content,
+			 images,
+			 video_id,
+			 forward_id,
+			 forward_count,
+			 like_count,
+			 comment_count,
+			 status,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.dynamicId},
+				 #{item.userId},
+				 #{item.dynamicType},
+				 #{item.content},
+				 #{item.images},
+				 #{item.videoId},
+				 #{item.forwardId},
+				 #{item.forwardCount},
+				 #{item.likeCount},
+				 #{item.commentCount},
+				 #{item.status},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.UserDynamic">
+		 INSERT INTO user_dynamic(
+			 dynamic_id,
+			 user_id,
+			 dynamic_type,
+			 content,
+			 images,
+			 video_id,
+			 forward_id,
+			 forward_count,
+			 like_count,
+			 comment_count,
+			 status,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.dynamicId},
+				 #{item.userId},
+				 #{item.dynamicType},
+				 #{item.content},
+				 #{item.images},
+				 #{item.videoId},
+				 #{item.forwardId},
+				 #{item.forwardCount},
+				 #{item.likeCount},
+				 #{item.commentCount},
+				 #{item.status},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			dynamic_id = VALUES(dynamic_id),
+			user_id = VALUES(user_id),
+			dynamic_type = VALUES(dynamic_type),
+			content = VALUES(content),
+			images = VALUES(images),
+			video_id = VALUES(video_id),
+			forward_id = VALUES(forward_id),
+			forward_count = VALUES(forward_count),
+			like_count = VALUES(like_count),
+			comment_count = VALUES(comment_count),
+			status = VALUES(status),
+			create_time = VALUES(create_time),
+			update_time = VALUES(update_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.UserDynamicQuery">
+		 UPDATE user_dynamic d
+ 		 <set>
+			<if test="bean.dynamicId != null">
+				 dynamic_id = #{bean.dynamicId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.dynamicType != null">
+				 dynamic_type = #{bean.dynamicType},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.images != null">
+				 images = #{bean.images},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.forwardId != null">
+				 forward_id = #{bean.forwardId},
+			</if>
+			<if test="bean.forwardCount != null">
+				 forward_count = #{bean.forwardCount},
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count = #{bean.likeCount},
+			</if>
+			<if test="bean.commentCount != null">
+				 comment_count = #{bean.commentCount},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete d from user_dynamic d
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据DynamicId修改-->
+	<update id="updateByDynamicId" parameterType="com.machugit.entity.po.UserDynamic">
+		 UPDATE user_dynamic
+ 		 <set>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.dynamicType != null">
+				 dynamic_type = #{bean.dynamicType},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.images != null">
+				 images = #{bean.images},
+			</if>
+			<if test="bean.videoId != null">
+				 video_id = #{bean.videoId},
+			</if>
+			<if test="bean.forwardId != null">
+				 forward_id = #{bean.forwardId},
+			</if>
+			<if test="bean.forwardCount != null">
+				 forward_count = #{bean.forwardCount},
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count = #{bean.likeCount},
+			</if>
+			<if test="bean.commentCount != null">
+				 comment_count = #{bean.commentCount},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 where dynamic_id=#{dynamicId}
+	</update>
+
+	<!-- 根据DynamicId删除-->
+	<delete id="deleteByDynamicId">
+		delete from user_dynamic where dynamic_id=#{dynamicId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByDynamicId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user_dynamic d LEFT JOIN user_info u ON d.user_id = u.user_id where dynamic_id=#{dynamicId}
+	</select>
+
+	<!-- 根据UserId获取对象-->
+	<select id="selectByUserId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user_dynamic d where user_id=#{userId}
+	</select>
+
+</mapper>

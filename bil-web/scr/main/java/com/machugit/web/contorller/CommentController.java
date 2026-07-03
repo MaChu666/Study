@@ -30,13 +30,13 @@ public class CommentController extends ABaseController {
     @RequestMapping("/postComment")
     public ResponseVO postComment(@NotEmpty String videoId,
                                   @NotEmpty String content,
-                                  @NotEmpty String replyCommentId,
-                                  @NotEmpty String imgPath) {
+                                  String replyCommentId,
+                                  String imgPath) {
         TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
         if (tokenUserInfoDto == null) {
             throw new BusinessException("请先登录");
         }
-        Integer replyCommentIdInt = Integer.parseInt(replyCommentId);
+        Integer replyCommentIdInt = (replyCommentId != null && !replyCommentId.isEmpty()) ? Integer.parseInt(replyCommentId) : 0;
         commentInfoService.postComment(tokenUserInfoDto.getUserId(), videoId, content, replyCommentIdInt, imgPath);
         return getSuccessResponseVO(null);
     }

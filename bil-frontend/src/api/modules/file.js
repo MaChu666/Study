@@ -4,4 +4,5 @@ export const getResourceApi = (data) => request({ url: '/file/getResource', meth
 export const uploadImageApi = (data) => request({ url: '/file/uploadImage', method: 'post', data })
 export const preUploadVideoApi = (data) => request({ url: '/file/preUploadVideo', method: 'post', data })
 export const uploadVideoApi = (data) => request({ url: '/file/uploadVideo', method: 'post', data })
+export const completeUploadApi = (data) => request({ url: '/file/completeUpload', method: 'post', data })
 export const delUploadVideoApi = (data) => request({ url: '/file/delUploadVideo', method: 'post', data })

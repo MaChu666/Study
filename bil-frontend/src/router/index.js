@@ -11,7 +11,9 @@ const routes = [
       { path: 'search', name: 'search', component: () => import('@/views/SearchView.vue') },
       { path: 'video/:videoId', name: 'video-detail', component: () => import('@/views/VideoDetailView.vue') },
       { path: 'user/:userId?', name: 'user-home', component: () => import('@/views/UserHomeView.vue') },
-      { path: 'creator', name: 'creator', meta: { requiresAuth: true }, component: () => import('@/views/CreatorCenterView.vue') }
+      { path: 'creator', name: 'creator', meta: { requiresAuth: true }, component: () => import('@/views/CreatorCenterView.vue') },
+      { path: 'messages', name: 'messages', meta: { requiresAuth: true }, component: () => import('@/views/MessageCenterView.vue') },
+      { path: 'series/:seriesId', name: 'series-detail', component: () => import('@/views/SeriesDetailView.vue') }
     ]
   }
 ]

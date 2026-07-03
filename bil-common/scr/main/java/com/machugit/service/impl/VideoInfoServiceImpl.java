@@ -9,17 +9,24 @@ import org.springframework.stereotype.Service;
 
 import com.machugit.component.RedisComponent;
 import com.machugit.entity.enums.PageSize;
+import com.machugit.entity.po.CategoryInfo;
 import com.machugit.entity.po.VideoInfo;
 import com.machugit.entity.po.VideoInfoFile;
+import com.machugit.entity.query.CategoryInfoQuery;
 import com.machugit.entity.query.SimplePage;
 import com.machugit.entity.query.VideoInfoFileQuery;
 import com.machugit.entity.query.VideoInfoQuery;
 import com.machugit.entity.vo.PaginationResultVO;
 import com.machugit.exception.BusinessException;
+import com.machugit.mappers.CategoryInfoMapper;
 import com.machugit.mappers.VideoInfoFileMapper;
 import com.machugit.mappers.VideoInfoMapper;
 import com.machugit.redis.RedisUtils;
 import com.machugit.service.VideoInfoService;
+import com.machugit.service.impl.VideoAuditLogServiceImpl;
+import com.machugit.entity.po.UserDynamic;
+import com.machugit.mappers.UserDynamicMapper;
+import com.machugit.entity.query.UserDynamicQuery;
 import com.machugit.utils.StringTools;
 
 /**
@@ -35,18 +42,29 @@ public class VideoInfoServiceImpl implements VideoInfoService {
     private VideoInfoFileMapper<VideoInfoFile, VideoInfoFileQuery> videoInfoFileMapper;
 
     @Resource
+    private CategoryInfoMapper<CategoryInfo, CategoryInfoQuery> categoryInfoMapper;
+
+    @Resource
     private RedisUtils<String> redisUtils;
 
     @Resource
     private RedisComponent redisComponent;
 
+    @Resource
+    private VideoAuditLogServiceImpl videoAuditLogService;
+
+    @Resource
+    private UserDynamicMapper<UserDynamic, UserDynamicQuery> userDynamicMapper;
+
     /**
-     * 加载推荐视频
+     * 加载推荐视频（加权排序：播放量 + 点赞*2 + 投币*3 + 收藏*2）
      */
     @Override
     public List<VideoInfo> loadRecommendVideo() {
         VideoInfoQuery query = new VideoInfoQuery();
-        query.setOrderBy("play_count desc");
+        query.setStatus(1);
+        query.setIsDeleted(0);
+        query.setOrderBy("(play_count + like_count * 2 + coin_count * 3 + collect_count * 2) desc");
         query.setSimplePage(new SimplePage(0, PageSize.SIZE15.getSize()));
         return this.videoInfoMapper.selectList(query);
     }
@@ -57,8 +75,14 @@ public class VideoInfoServiceImpl implements VideoInfoService {
     @Override
     public PaginationResultVO<VideoInfo> loadVideo(Integer pCategoryId, Integer categoryId, Integer pageNo) {
         VideoInfoQuery query = new VideoInfoQuery();
-        query.setPCategoryId(pCategoryId);
-        query.setCategoryId(categoryId);
+        if (pCategoryId != null && pCategoryId > 0) {
+            query.setPCategoryId(pCategoryId);
+        }
+        if (categoryId != null && categoryId > 0) {
+            query.setCategoryId(categoryId);
+        }
+        query.setStatus(1);
+        query.setIsDeleted(0);
         query.setPageNo(pageNo);
         query.setPageSize(PageSize.SIZE15.getSize());
         query.setOrderBy("create_time desc");
@@ -75,7 +99,15 @@ public class VideoInfoServiceImpl implements VideoInfoService {
      */
     @Override
     public VideoInfo getVideoInfo(String videoId) {
-        return this.videoInfoMapper.selectByVideoId(videoId);
+        VideoInfo video = this.videoInfoMapper.selectByVideoId(videoId);
+        if (video != null) {
+            VideoInfo updateInfo = new VideoInfo();
+            Long currentPlay = video.getPlayCount() == null ? 0L : video.getPlayCount();
+            updateInfo.setPlayCount(currentPlay + 1);
+            this.videoInfoMapper.updateByVideoId(updateInfo, videoId);
+            video.setPlayCount(currentPlay + 1);
+        }
+        return video;
     }
 
     /**
@@ -94,11 +126,52 @@ public class VideoInfoServiceImpl implements VideoInfoService {
      */
     @Override
     public List<VideoInfo> search(String keyword) {
+        return searchWithOrder(keyword, "play_count desc");
+    }
+
+    public List<VideoInfo> searchWithOrder(String keyword, String orderBy) {
         VideoInfoQuery query = new VideoInfoQuery();
         query.setVideoNameFuzzy(keyword);
-        query.setOrderBy("play_count desc");
+        query.setStatus(1);
+        query.setIsDeleted(0);
+        query.setOrderBy(orderBy != null ? orderBy : "play_count desc");
         query.setSimplePage(new SimplePage(0, PageSize.SIZE20.getSize()));
-        return this.videoInfoMapper.selectList(query);
+        List<VideoInfo> list = this.videoInfoMapper.selectList(query);
+        // Also search by tags if name search yields few results
+        if (list.size() < 10) {
+            VideoInfoQuery tagQuery = new VideoInfoQuery();
+            tagQuery.setTagsFuzzy(keyword);
+            tagQuery.setStatus(1);
+            tagQuery.setIsDeleted(0);
+            tagQuery.setOrderBy("play_count desc");
+            tagQuery.setSimplePage(new SimplePage(0, PageSize.SIZE20.getSize()));
+            List<VideoInfo> tagList = this.videoInfoMapper.selectList(tagQuery);
+            for (VideoInfo v : tagList) {
+                if (list.size() >= 20) break;
+                if (!list.contains(v)) list.add(v);
+            }
+        }
+        // Also search by matching category name
+        CategoryInfoQuery catQuery = new CategoryInfoQuery();
+        catQuery.setCategoryNameFuzzy(keyword);
+        List<CategoryInfo> categories = this.categoryInfoMapper.selectList(catQuery);
+        if (categories != null && !categories.isEmpty()) {
+            for (CategoryInfo cat : categories) {
+                if (list.size() >= 20) break;
+                VideoInfoQuery catVideoQuery = new VideoInfoQuery();
+                catVideoQuery.setCategoryId(cat.getCategoryId());
+                catVideoQuery.setStatus(1);
+                catVideoQuery.setIsDeleted(0);
+                catVideoQuery.setOrderBy(orderBy != null ? orderBy : "play_count desc");
+                catVideoQuery.setSimplePage(new SimplePage(0, PageSize.SIZE20.getSize()));
+                List<VideoInfo> catList = this.videoInfoMapper.selectList(catVideoQuery);
+                for (VideoInfo v : catList) {
+                    if (list.size() >= 20) break;
+                    if (!list.contains(v)) list.add(v);
+                }
+            }
+        }
+        return list;
     }
 
     /**
@@ -119,12 +192,28 @@ public class VideoInfoServiceImpl implements VideoInfoService {
         if (currentVideo == null) {
             throw new BusinessException("视频不存在");
         }
-        // TODO 从ElasticSearch获取推荐视频，当前回退为查询同分类视频
         VideoInfoQuery query = new VideoInfoQuery();
         query.setCategoryId(currentVideo.getCategoryId());
-        query.setOrderBy("play_count desc");
+        query.setStatus(1);
+        query.setIsDeleted(0);
+        query.setOrderBy("(play_count + like_count * 2 + coin_count * 3) desc");
         query.setSimplePage(new SimplePage(0, PageSize.SIZE15.getSize()));
-        return this.videoInfoMapper.selectList(query);
+        List<VideoInfo> list = this.videoInfoMapper.selectList(query);
+        list.removeIf(v -> v.getVideoId().equals(videoId));
+        if (list.size() < 10) {
+            VideoInfoQuery hotQuery = new VideoInfoQuery();
+            hotQuery.setStatus(1);
+            hotQuery.setIsDeleted(0);
+            hotQuery.setOrderBy("play_count desc");
+            hotQuery.setSimplePage(new SimplePage(0, PageSize.SIZE15.getSize()));
+            List<VideoInfo> hotList = this.videoInfoMapper.selectList(hotQuery);
+            hotList.removeIf(v -> v.getVideoId().equals(videoId));
+            for (VideoInfo v : hotList) {
+                if (list.size() >= 15) break;
+                if (!list.contains(v)) list.add(v);
+            }
+        }
+        return list;
     }
 
     /**
@@ -133,6 +222,8 @@ public class VideoInfoServiceImpl implements VideoInfoService {
     @Override
     public List<VideoInfo> loadHotVideoList() {
         VideoInfoQuery query = new VideoInfoQuery();
+        query.setStatus(1);
+        query.setIsDeleted(0);
         query.setOrderBy("play_count desc");
         query.setSimplePage(new SimplePage(0, PageSize.SIZE20.getSize()));
         return this.videoInfoMapper.selectList(query);
@@ -153,6 +244,7 @@ public class VideoInfoServiceImpl implements VideoInfoService {
      */
     @Override
     public PaginationResultVO<VideoInfo> loadVideoList(VideoInfoQuery query) {
+        query.setIsDeleted(0);
         int count = this.videoInfoMapper.selectCount(query);
         int pageSize = query.getPageSize() == null ? PageSize.SIZE15.getSize() : query.getPageSize();
         SimplePage page = new SimplePage(query.getPageNo(), count, pageSize);
@@ -173,12 +265,15 @@ public class VideoInfoServiceImpl implements VideoInfoService {
         VideoInfo updateInfo = new VideoInfo();
         updateInfo.setStatus(status);
         updateInfo.setUpdateTime(new Date());
-        // TODO 保存审核原因到审核记录表
         this.videoInfoMapper.updateByVideoId(updateInfo, videoId);
+
+        if (videoAuditLogService != null) {
+            videoAuditLogService.logAudit(videoId, "admin", videoInfo.getStatus(), status, reason);
+        }
     }
 
     /**
-     * 删除视频
+     * 删除视频（软删除）
      */
     @Override
     public void deleteVideo(String videoId) {
@@ -186,9 +281,10 @@ public class VideoInfoServiceImpl implements VideoInfoService {
         if (videoInfo == null) {
             throw new BusinessException("视频不存在");
         }
-        // TODO 删除关联的视频文件记录和物理文件
-        this.videoInfoFileMapper.deleteByVideoId(videoId);
-        this.videoInfoMapper.deleteByVideoId(videoId);
+        VideoInfo updateInfo = new VideoInfo();
+        updateInfo.setIsDeleted(1);
+        updateInfo.setUpdateTime(new Date());
+        this.videoInfoMapper.updateByVideoId(updateInfo, videoId);
     }
 
     /**
@@ -204,6 +300,7 @@ public class VideoInfoServiceImpl implements VideoInfoService {
         videoInfo.setCoinCount(0L);
         videoInfo.setCollectCount(0L);
         videoInfo.setStatus(0);
+        videoInfo.setIsDeleted(0);
         videoInfo.setCreateTime(new Date());
         videoInfo.setUpdateTime(new Date());
         this.videoInfoMapper.insert(videoInfo);
@@ -215,6 +312,16 @@ public class VideoInfoServiceImpl implements VideoInfoService {
                 this.videoInfoFileMapper.updateByFileId(updateFile, fileId);
             }
         }
+
+        // 自动发布视频动态 (dynamicType=4)
+        UserDynamic dynamic = new UserDynamic();
+        dynamic.setUserId(videoInfo.getUserId());
+        dynamic.setDynamicType(4);
+        dynamic.setVideoId(videoInfo.getVideoId());
+        dynamic.setContent("发布了新视频: " + videoInfo.getVideoName());
+        dynamic.setCreateTime(new Date());
+        dynamic.setUpdateTime(new Date());
+        this.userDynamicMapper.insert(dynamic);
     }
 
     /**

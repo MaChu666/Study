@@ -41,9 +41,10 @@ public class VideoController extends ABaseController {
      * 分页加载视频
      */
     @RequestMapping("/loadVideo")
-    public ResponseVO loadVideo(@NotEmpty String pCategoryId, @NotEmpty String categoryId, @NotEmpty String pageNo) {
-        PaginationResultVO<VideoInfo> result = videoInfoService.loadVideo(
-                Integer.valueOf(pCategoryId), Integer.valueOf(categoryId), Integer.valueOf(pageNo));
+    public ResponseVO loadVideo(String pCategoryId, String categoryId, @NotEmpty String pageNo) {
+        Integer pCat = (pCategoryId != null && !pCategoryId.isEmpty()) ? Integer.valueOf(pCategoryId) : null;
+        Integer cat = (categoryId != null && !categoryId.isEmpty()) ? Integer.valueOf(categoryId) : null;
+        PaginationResultVO<VideoInfo> result = videoInfoService.loadVideo(pCat, cat, Integer.valueOf(pageNo));
         return getSuccessResponseVO(result);
     }
 

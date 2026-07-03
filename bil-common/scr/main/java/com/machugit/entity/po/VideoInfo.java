@@ -46,6 +46,11 @@ public class VideoInfo implements Serializable {
     private Integer postType;
 
     /**
+     * 转载来源链接（转载时必填）
+     */
+    private String sourceUrl;
+
+    /**
      * 标签
      */
     private String tags;
@@ -64,6 +69,21 @@ public class VideoInfo implements Serializable {
      * 用户id
      */
     private String userId;
+
+    /**
+     * 上传者昵称（JOIN查询，非DB字段）
+     */
+    private String userName;
+
+    /**
+     * 上传者头像（JOIN查询，非DB字段）
+     */
+    private String userAvatar;
+
+    /**
+     * 视频时长（子查询，非DB字段）
+     */
+    private Integer duration;
 
     /**
      * 播放量
@@ -101,11 +121,23 @@ public class VideoInfo implements Serializable {
     private Integer status;
 
     /**
+     * 逻辑删除（0：正常 1：已删）
+     */
+    private Integer isDeleted;
+
+    /**
      * 创建时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+
+    /**
+     * 定时发布时间（为空则立即发布）
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date scheduledPublishTime;
 
     /**
      * 更新时间
@@ -163,6 +195,14 @@ public class VideoInfo implements Serializable {
         return this.postType;
     }
 
+    public void setSourceUrl(String sourceUrl){
+        this.sourceUrl = sourceUrl;
+    }
+
+    public String getSourceUrl(){
+        return this.sourceUrl;
+    }
+
     public void setTags(String tags){
         this.tags = tags;
     }
@@ -194,6 +234,13 @@ public class VideoInfo implements Serializable {
     public String getUserId(){
         return this.userId;
     }
+
+    public void setUserName(String userName){ this.userName = userName; }
+    public String getUserName(){ return this.userName; }
+    public void setUserAvatar(String userAvatar){ this.userAvatar = userAvatar; }
+    public String getUserAvatar(){ return this.userAvatar; }
+    public void setDuration(Integer duration){ this.duration = duration; }
+    public Integer getDuration(){ return this.duration; }
 
     public void setPlayCount(Long playCount){
         this.playCount = playCount;
@@ -251,12 +298,28 @@ public class VideoInfo implements Serializable {
         return this.status;
     }
 
+    public void setIsDeleted(Integer isDeleted){
+        this.isDeleted = isDeleted;
+    }
+
+    public Integer getIsDeleted(){
+        return this.isDeleted;
+    }
+
     public void setCreateTime(Date createTime){
         this.createTime = createTime;
     }
 
     public Date getCreateTime(){
         return this.createTime;
+    }
+
+    public void setScheduledPublishTime(Date scheduledPublishTime){
+        this.scheduledPublishTime = scheduledPublishTime;
+    }
+
+    public Date getScheduledPublishTime(){
+        return this.scheduledPublishTime;
     }
 
     public void setUpdateTime(Date updateTime){
@@ -269,6 +332,19 @@ public class VideoInfo implements Serializable {
 
     @Override
     public String toString (){
-        return "视频id:"+(videoId == null ? "空" : videoId)+"，视频封面:"+(videoCover == null ? "空" : videoCover)+"，视频名称:"+(videoName == null ? "空" : videoName)+"，父分类id:"+(pCategoryId == null ? "空" : pCategoryId)+"，分类id:"+(categoryId == null ? "空" : categoryId)+"，投稿类型:"+(postType == null ? "空" : postType)+"，标签:"+(tags == null ? "空" : tags)+"，视频简介:"+(introduction == null ? "空" : introduction)+"，互动设置:"+(interaction == null ? "空" : interaction)+"，用户id:"+(userId == null ? "空" : userId)+"，播放量:"+(playCount == null ? "空" : playCount)+"，点赞数:"+(likeCount == null ? "空" : likeCount)+"，弹幕数:"+(danmuCount == null ? "空" : danmuCount)+"，评论数:"+(commentCount == null ? "空" : commentCount)+"，投币数:"+(coinCount == null ? "空" : coinCount)+"，收藏数:"+(collectCount == null ? "空" : collectCount)+"，状态:"+(status == null ? "空" : status)+"，创建时间:"+(createTime == null ? "空" : DateUtil.format(createTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()))+"，更新时间:"+(updateTime == null ? "空" : DateUtil.format(updateTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
+        return "视频id:"+(videoId == null ? "空" : videoId)+"，视频封面:"+(videoCover == null ? "空" : videoCover)+"，视频名称:"+(videoName == null ? "空" : videoName)+"，父分类id:"+(pCategoryId == null ? "空" : pCategoryId)+"，分类id:"+(categoryId == null ? "空" : categoryId)+"，投稿类型:"+(postType == null ? "空" : postType)+"，转载来源链接（转载时必填）:"+(sourceUrl == null ? "空" : sourceUrl)+"，标签:"+(tags == null ? "空" : tags)+"，视频简介:"+(introduction == null ? "空" : introduction)+"，互动设置:"+(interaction == null ? "空" : interaction)+"，用户id:"+(userId == null ? "空" : userId)+"，播放量:"+(playCount == null ? "空" : playCount)+"，点赞数:"+(likeCount == null ? "空" : likeCount)+"，弹幕数:"+(danmuCount == null ? "空" : danmuCount)+"，评论数:"+(commentCount == null ? "空" : commentCount)+"，投币数:"+(coinCount == null ? "空" : coinCount)+"，收藏数:"+(collectCount == null ? "空" : collectCount)+"，状态:"+(status == null ? "空" : status)+"，逻辑删除（0：正常 1：已删）:"+(isDeleted == null ? "空" : isDeleted)+"，创建时间:"+(createTime == null ? "空" : DateUtil.format(createTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()))+"，定时发布时间（为空则立即发布）:"+(scheduledPublishTime == null ? "空" : DateUtil.format(scheduledPublishTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()))+"，更新时间:"+(updateTime == null ? "空" : DateUtil.format(updateTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VideoInfo videoInfo = (VideoInfo) o;
+        return videoId != null && videoId.equals(videoInfo.videoId);
+    }
+
+    @Override
+    public int hashCode() {
+        return videoId != null ? videoId.hashCode() : 0;
     }
 }

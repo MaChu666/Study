@@ -37,6 +37,7 @@ const menuItems = [
   { path: '/video', label: '稿件管理' },
   { path: '/interact', label: '互动管理' },
   { path: '/user', label: '用户管理' },
+  { path: '/banner', label: 'Banner管理' },
   { path: '/setting', label: '系统设置' }
 ]
 

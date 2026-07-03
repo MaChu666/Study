@@ -31,7 +31,7 @@ public class DanmuController extends ABaseController {
      * 发布弹幕
      */
     @RequestMapping("/postDanmu")
-    public ResponseVO postDanmu(@NotEmpty String videoId, @NotEmpty String fileId, @NotEmpty String text,
+    public ResponseVO postDanmu(@NotEmpty String videoId, String fileId, @NotEmpty String text,
                                 @NotEmpty String mode, @NotEmpty String color, @NotEmpty String time) {
         TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
         if (tokenUserInfoDto == null) {
@@ -46,7 +46,7 @@ public class DanmuController extends ABaseController {
      * 加载弹幕
      */
     @RequestMapping("/loadDanmu")
-    public ResponseVO loadDanmu(@NotEmpty String fileId, @NotEmpty String videoId) {
+    public ResponseVO loadDanmu(String fileId, @NotEmpty String videoId) {
         List<DanmuInfo> list = danmuInfoService.loadDanmu(fileId, videoId);
         return getSuccessResponseVO(list);
     }

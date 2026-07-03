@@ -8,8 +8,12 @@ import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import com.machugit.entity.po.DanmuInfo;
+import com.machugit.entity.po.VideoInfo;
 import com.machugit.entity.query.DanmuInfoQuery;
+import com.machugit.entity.query.VideoInfoQuery;
+import com.machugit.exception.BusinessException;
 import com.machugit.mappers.DanmuInfoMapper;
+import com.machugit.mappers.VideoInfoMapper;
 import com.machugit.service.DanmuInfoService;
 
 
@@ -21,6 +25,9 @@ public class DanmuInfoServiceImpl implements DanmuInfoService {
 
     @Resource
     private DanmuInfoMapper<DanmuInfo, DanmuInfoQuery> danmuInfoMapper;
+
+    @Resource
+    private VideoInfoMapper<VideoInfo, VideoInfoQuery> videoInfoMapper;
 
     /**
      * 发布弹幕
@@ -37,6 +44,16 @@ public class DanmuInfoServiceImpl implements DanmuInfoService {
         danmuInfo.setTime(time);
         danmuInfo.setPostTime(new Date());
         this.danmuInfoMapper.insert(danmuInfo);
+
+        // Increment video danmu count
+        VideoInfo videoInfo = this.videoInfoMapper.selectByVideoId(videoId);
+        if (videoInfo == null) {
+            throw new BusinessException("视频信息不存在");
+        }
+        Long danmuCount = videoInfo.getDanmuCount() == null ? 0L : videoInfo.getDanmuCount();
+        VideoInfo updateInfo = new VideoInfo();
+        updateInfo.setDanmuCount(danmuCount + 1);
+        this.videoInfoMapper.updateByVideoId(updateInfo, videoId);
     }
 
     /**

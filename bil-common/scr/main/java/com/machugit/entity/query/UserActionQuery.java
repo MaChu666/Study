@@ -34,6 +34,11 @@ public class UserActionQuery extends BaseParam {
     private Integer actionType;
 
     /**
+     * 投币数量（仅投币类型有效，1或2）
+     */
+    private Integer coinCount;
+
+    /**
      * 行为计数
      */
     private Integer actionCount;
@@ -42,6 +47,11 @@ public class UserActionQuery extends BaseParam {
      * 评论id
      */
     private Integer commentId;
+
+    /**
+     * 是否取消（0：有效 1：已取消）
+     */
+    private Integer isCancel;
 
     /**
      * 创建时间
@@ -101,6 +111,14 @@ public class UserActionQuery extends BaseParam {
         return this.actionType;
     }
 
+    public void setCoinCount(Integer coinCount){
+        this.coinCount = coinCount;
+    }
+
+    public Integer getCoinCount(){
+        return this.coinCount;
+    }
+
     public void setActionCount(Integer actionCount){
         this.actionCount = actionCount;
     }
@@ -115,6 +133,14 @@ public class UserActionQuery extends BaseParam {
 
     public Integer getCommentId(){
         return this.commentId;
+    }
+
+    public void setIsCancel(Integer isCancel){
+        this.isCancel = isCancel;
+    }
+
+    public Integer getIsCancel(){
+        return this.isCancel;
     }
 
     public void setCreateTime(String createTime){

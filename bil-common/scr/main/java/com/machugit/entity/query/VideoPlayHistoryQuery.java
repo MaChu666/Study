@@ -36,6 +36,16 @@ public class VideoPlayHistoryQuery extends BaseParam {
     private String fileIdFuzzy;
 
     /**
+     * 上次观看到第几秒
+     */
+    private Integer progressSeconds;
+
+    /**
+     * 是否看完（0：未 1：已看完）
+     */
+    private Integer isFinished;
+
+    /**
      * 更新时间
      */
     private String updateTime;
@@ -99,6 +109,22 @@ public class VideoPlayHistoryQuery extends BaseParam {
 
     public String getFileIdFuzzy(){
         return this.fileIdFuzzy;
+    }
+
+    public void setProgressSeconds(Integer progressSeconds){
+        this.progressSeconds = progressSeconds;
+    }
+
+    public Integer getProgressSeconds(){
+        return this.progressSeconds;
+    }
+
+    public void setIsFinished(Integer isFinished){
+        this.isFinished = isFinished;
+    }
+
+    public Integer getIsFinished(){
+        return this.isFinished;
     }
 
     public void setUpdateTime(String updateTime){

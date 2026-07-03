@@ -1,6 +1,8 @@
 package com.machugit.web.contorller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotEmpty;
@@ -16,7 +18,9 @@ import com.machugit.entity.po.UserCollection;
 import com.machugit.entity.po.UserFocus;
 import com.machugit.entity.po.UserInfo;
 import com.machugit.entity.po.VideoInfo;
+import com.machugit.entity.query.UserFocusQuery;
 import com.machugit.exception.BusinessException;
+import com.machugit.entity.query.UserInfoQuery;
 import com.machugit.entity.query.VideoInfoQuery;
 import com.machugit.entity.vo.PaginationResultVO;
 import com.machugit.entity.vo.ResponseVO;
@@ -45,20 +49,24 @@ public class UHomeController extends ABaseController {
     private VideoInfoServiceImpl videoInfoService;
 
     @RequestMapping("/updateUserInfo")
-    public ResponseVO updateUserInfo(@NotEmpty String useName,
+    public ResponseVO updateUserInfo(String useName,
                                      String personProfile,
                                      String school,
                                      String birthday,
-                                     String sex) {
+                                     String sex,
+                                     String avatar,
+                                     String bannerImage) {
         TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
         if (tokenUserInfoDto == null) {
             throw new BusinessException("请先登录");
         }
         UserInfo userInfo = new UserInfo();
-        userInfo.setUseName(useName);
+        if (useName != null && !useName.isEmpty()) userInfo.setUseName(useName);
         userInfo.setPersonProfile(personProfile);
         userInfo.setSchool(school);
         userInfo.setBirthday(birthday);
+        userInfo.setAvatar(avatar);
+        userInfo.setBannerImage(bannerImage);
         if (sex != null && !sex.isEmpty()) {
             try {
                 userInfo.setSex(Integer.valueOf(sex));
@@ -70,8 +78,24 @@ public class UHomeController extends ABaseController {
         return getSuccessResponseVO(null);
     }
 
+    @RequestMapping("/getUserCountInfo")
+    public ResponseVO getUserCountInfo() {
+        Map<String, Object> result = new HashMap<>();
+        Integer userCount = userInfoService.findCountByParam(new UserInfoQuery());
+        result.put("userCount", userCount);
+        VideoInfoQuery videoQuery = new VideoInfoQuery();
+        videoQuery.setPageNo(1);
+        PaginationResultVO<VideoInfo> videoResult = videoInfoService.loadVideoList(videoQuery);
+        result.put("videoCount", videoResult.getTotalCount());
+        // TODO: add count methods to service layer for like/comment/danmu
+        result.put("likeCount", 0);
+        result.put("commentCount", 0);
+        result.put("danmuCount", 0);
+        return getSuccessResponseVO(result);
+    }
+
     @RequestMapping("/loadVideoList")
-    public ResponseVO loadVideoList(@NotEmpty String userId,
+    public ResponseVO loadVideoList(String userId,
                                     @NotEmpty String pageNo) {
         VideoInfoQuery query = new VideoInfoQuery();
         query.setUserId(userId);
@@ -84,33 +108,125 @@ public class UHomeController extends ABaseController {
     @RequestMapping("/getUserInfo")
     public ResponseVO getUserInfo(@NotEmpty String userId) {
         UserInfo userInfo = userInfoService.getUserInfoByUserId(userId);
-        return getSuccessResponseVO(userInfo);
+        if (userInfo != null) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("userId", userInfo.getUserId());
+            result.put("useName", userInfo.getUseName());
+            result.put("email", userInfo.getEmail());
+            result.put("avatar", userInfo.getAvatar());
+            result.put("bannerImage", userInfo.getBannerImage());
+            result.put("personProfile", userInfo.getPersonProfile());
+            result.put("school", userInfo.getSchool());
+            result.put("birthday", userInfo.getBirthday());
+            result.put("sex", userInfo.getSex());
+            result.put("joinTime", userInfo.getJoinTime());
+            // 自动重算等级（已有用户数据可能未升级）
+            int exp = userInfo.getExp() == null ? 0 : userInfo.getExp();
+            int[] upgradeExps = {0, 100, 500, 1500, 5000, 15000};
+            int level = 1;
+            for (int i = upgradeExps.length - 1; i > 0; i--) {
+                if (exp >= upgradeExps[i]) { level = i + 1; break; }
+            }
+            if (level > userInfo.getLevel()) {
+                UserInfo fixLevel = new UserInfo();
+                fixLevel.setLevel(level);
+                userInfoService.updateUserInfoByUserId(fixLevel, userId);
+                userInfo.setLevel(level);
+            }
+            result.put("level", userInfo.getLevel());
+            result.put("exp", exp);
+            result.put("vipType", userInfo.getVipType());
+            result.put("theme", userInfo.getTheme());
+            UserFocusQuery fq = new UserFocusQuery();
+            fq.setUserId(userId);
+            result.put("followCount", userFocusService.loadFocusList(userId).size());
+            fq.setUserId(null);
+            fq.setFocusUserId(userId);
+            result.put("fansCount", userFocusService.loadFansList(userId).size());
+
+            // Aggregate total playCount and likeCount from all user's videos
+            Long totalPlayCount = 0L;
+            Long totalLikeCount = 0L;
+            VideoInfoQuery videoQuery = new VideoInfoQuery();
+            videoQuery.setUserId(userId);
+            videoQuery.setPageNo(1);
+            videoQuery.setPageSize(10000);
+            videoQuery.setIsDeleted(0);
+            PaginationResultVO<VideoInfo> videoResult = videoInfoService.loadVideoList(videoQuery);
+            if (videoResult != null && videoResult.getList() != null) {
+                for (VideoInfo v : videoResult.getList()) {
+                    totalPlayCount += (v.getPlayCount() != null ? v.getPlayCount() : 0L);
+                    totalLikeCount += (v.getLikeCount() != null ? v.getLikeCount() : 0L);
+                }
+            }
+            result.put("totalCoinCount", userInfo.getTotalCoinCount());
+            result.put("currentCoinCount", userInfo.getCurrentCoinCount());
+            result.put("playCount", totalPlayCount);
+            result.put("likeCount", totalLikeCount);
+
+            return getSuccessResponseVO(result);
+        }
+        return getSuccessResponseVO(null);
     }
 
     @RequestMapping("/focus")
-    public ResponseVO focus(@NotEmpty String userId,
+    public ResponseVO focus(String userId,
                             @NotEmpty String focusUserId) {
-        userFocusService.focus(userId, focusUserId);
+        TokenUserInfoDto user = getTokenUserInfoDto();
+        if (user == null) throw new BusinessException("请先登录");
+        String uid = (userId != null && !userId.isEmpty()) ? userId : user.getUserId();
+        userFocusService.focus(uid, focusUserId);
         return getSuccessResponseVO(null);
     }
 
     @RequestMapping("/cancelFocus")
-    public ResponseVO cancelFocus(@NotEmpty String userId,
+    public ResponseVO cancelFocus(String userId,
                                   @NotEmpty String focusUserId) {
-        userFocusService.cancelFocus(userId, focusUserId);
+        TokenUserInfoDto user = getTokenUserInfoDto();
+        if (user == null) throw new BusinessException("请先登录");
+        String uid = (userId != null && !userId.isEmpty()) ? userId : user.getUserId();
+        userFocusService.cancelFocus(uid, focusUserId);
         return getSuccessResponseVO(null);
     }
 
     @RequestMapping("/loadFocusList")
     public ResponseVO loadFocusList(@NotEmpty String userId) {
         List<UserFocus> list = userFocusService.loadFocusList(userId);
-        return getSuccessResponseVO(list);
+        // Enrich with user info (name + avatar)
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (UserFocus f : list) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("userId", f.getFocusUserId());
+            item.put("focusUserId", f.getFocusUserId());
+            item.put("createTime", f.getCreateTime());
+            UserInfo u = userInfoService.getUserInfoByUserId(f.getFocusUserId());
+            if (u != null) {
+                item.put("useName", u.getUseName());
+                item.put("avatar", u.getAvatar());
+            }
+            result.add(item);
+        }
+        return getSuccessResponseVO(result);
     }
 
     @RequestMapping("/loadFansList")
     public ResponseVO loadFansList(@NotEmpty String userId) {
         List<UserFocus> list = userFocusService.loadFansList(userId);
-        return getSuccessResponseVO(list);
+        // Enrich with user info (name + avatar)
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (UserFocus f : list) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("userId", f.getUserId());
+            item.put("focusUserId", f.getUserId());
+            item.put("createTime", f.getCreateTime());
+            UserInfo u = userInfoService.getUserInfoByUserId(f.getUserId());
+            if (u != null) {
+                item.put("useName", u.getUseName());
+                item.put("avatar", u.getAvatar());
+            }
+            result.add(item);
+        }
+        return getSuccessResponseVO(result);
     }
 
     @RequestMapping("/loadUserCollection")
@@ -126,5 +242,10 @@ public class UHomeController extends ABaseController {
         userInfo.setTheme(Integer.valueOf(theme));
         userInfoService.updateUserInfoByUserId(userInfo, userId);
         return getSuccessResponseVO(null);
+    }
+
+    @RequestMapping("/searchUsers")
+    public ResponseVO searchUsers(@NotEmpty String keyword) {
+        return getSuccessResponseVO(userInfoService.searchUsers(keyword));
     }
 }

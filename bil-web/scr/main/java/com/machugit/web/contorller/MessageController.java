@@ -74,4 +74,33 @@ public class MessageController extends ABaseController {
         messageInfoService.readAll(tokenUserInfoDto.getUserId());
         return getSuccessResponseVO(null);
     }
+
+    /**
+     * 发送私信
+     */
+    @RequestMapping("/sendPrivateMessage")
+    public ResponseVO sendPrivateMessage(@NotEmpty String targetUserId,
+                                          @NotEmpty String content) {
+        TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
+        if (tokenUserInfoDto == null) {
+            throw new BusinessException("请先登录");
+        }
+        String senderId = tokenUserInfoDto.getUserId();
+        messageInfoService.sendPrivateMessage(senderId, targetUserId, content);
+        return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 加载私信列表（与指定用户的对话）
+     */
+    @RequestMapping("/loadPrivateMessages")
+    public ResponseVO loadPrivateMessages(@NotEmpty String targetUserId) {
+        TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
+        if (tokenUserInfoDto == null) {
+            throw new BusinessException("请先登录");
+        }
+        String userId = tokenUserInfoDto.getUserId();
+        List<MessageInfo> list = messageInfoService.loadPrivateMessages(userId, targetUserId);
+        return getSuccessResponseVO(list);
+    }
 }

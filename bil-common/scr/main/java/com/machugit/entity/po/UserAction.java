@@ -37,6 +37,11 @@ public class UserAction implements Serializable {
     private Integer actionType;
 
     /**
+     * 投币数量（仅投币类型有效，1或2）
+     */
+    private Integer coinCount;
+
+    /**
      * 行为计数
      */
     private Integer actionCount;
@@ -45,6 +50,11 @@ public class UserAction implements Serializable {
      * 评论id
      */
     private Integer commentId;
+
+    /**
+     * 是否取消（0：有效 1：已取消）
+     */
+    private Integer isCancel;
 
     /**
      * 创建时间
@@ -86,6 +96,14 @@ public class UserAction implements Serializable {
         return this.actionType;
     }
 
+    public void setCoinCount(Integer coinCount){
+        this.coinCount = coinCount;
+    }
+
+    public Integer getCoinCount(){
+        return this.coinCount;
+    }
+
     public void setActionCount(Integer actionCount){
         this.actionCount = actionCount;
     }
@@ -102,6 +120,14 @@ public class UserAction implements Serializable {
         return this.commentId;
     }
 
+    public void setIsCancel(Integer isCancel){
+        this.isCancel = isCancel;
+    }
+
+    public Integer getIsCancel(){
+        return this.isCancel;
+    }
+
     public void setCreateTime(Date createTime){
         this.createTime = createTime;
     }
@@ -112,6 +138,6 @@ public class UserAction implements Serializable {
 
     @Override
     public String toString (){
-        return "行为id:"+(actionId == null ? "空" : actionId)+"，视频id:"+(videoId == null ? "空" : videoId)+"，用户id:"+(userId == null ? "空" : userId)+"，行为类型:"+(actionType == null ? "空" : actionType)+"，行为计数:"+(actionCount == null ? "空" : actionCount)+"，评论id:"+(commentId == null ? "空" : commentId)+"，创建时间:"+(createTime == null ? "空" : DateUtil.format(createTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
+        return "行为id:"+(actionId == null ? "空" : actionId)+"，视频id:"+(videoId == null ? "空" : videoId)+"，用户id:"+(userId == null ? "空" : userId)+"，行为类型:"+(actionType == null ? "空" : actionType)+"，投币数量（仅投币类型有效，1或2）:"+(coinCount == null ? "空" : coinCount)+"，行为计数:"+(actionCount == null ? "空" : actionCount)+"，评论id:"+(commentId == null ? "空" : commentId)+"，是否取消（0：有效 1：已取消）:"+(isCancel == null ? "空" : isCancel)+"，创建时间:"+(createTime == null ? "空" : DateUtil.format(createTime, DateTimePatternEnum.YYYY_MM_DD_HH_MM_SS.getPattern()));
     }
 }

@@ -6,14 +6,14 @@ describe('theme store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
-    document.documentElement.classList.remove('theme-dark')
+    document.documentElement.setAttribute('data-theme', 'light')
   })
 
-  it('toggles theme and applies the root class', () => {
+  it('toggles theme and applies the data attribute', () => {
     const store = useThemeStore()
     store.toggleTheme()
     expect(store.mode).toBe('dark')
-    expect(document.documentElement.classList.contains('theme-dark')).toBe(true)
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
     expect(localStorage.getItem('bil-theme')).toBe('dark')
   })
 
@@ -22,6 +22,6 @@ describe('theme store', () => {
 
     useThemeStore()
 
-    expect(document.documentElement.classList.contains('theme-dark')).toBe(true)
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
   })
 })

@@ -24,6 +24,11 @@ public interface VideoInfoFileService {
     void uploadVideo(MultipartFile chunkFile, Integer chunkIndex, String uploadId);
 
     /**
+     * 合并分片并转码为 HLS
+     */
+    void completeUpload(String uploadId, String fileId);
+
+    /**
      * 删除上传视频
      */
     void delUploadVideo(String uploadId);

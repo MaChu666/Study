@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.machugit.mappers.UserSignInMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="com.machugit.entity.po.UserSignIn">
+		<!--签到id-->
+		<result column="sign_id" property="signId"  />
+		<!--用户id-->
+		<result column="user_id" property="userId"  />
+		<!--签到日期-->
+		<result column="sign_date" property="signDate"  />
+		<!--连续天数-->
+		<result column="continuous_days" property="continuousDays"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 s.sign_id,s.user_id,s.sign_date,s.continuous_days,s.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.signId != null">
+				 and  s.sign_id = #{query.signId}
+			</if>
+			<if test="query.userId != null and query.userId!=''">
+				 and  s.user_id = #{query.userId}
+			</if>
+			<if test="query.signDate != null and query.signDate!=''">
+				 <![CDATA[ and  s.sign_date=str_to_date(#{query.signDate}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.continuousDays != null">
+				 and  s.continuous_days = #{query.continuousDays}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  s.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.signDateStart!= null and query.signDateStart!=''">
+				 <![CDATA[ and  s.sign_date>=str_to_date(#{query.signDateStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.signDateEnd!= null and query.signDateEnd!=''">
+				 <![CDATA[ and  s.sign_date< date_sub(str_to_date(#{query.signDateEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  s.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  s.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM user_sign_in s <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM user_sign_in s <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="com.machugit.entity.po.UserSignIn">
+		 INSERT INTO user_sign_in
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.signId != null">
+				 sign_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.signDate != null">
+				 sign_date,
+			</if>
+			<if test="bean.continuousDays != null">
+				 continuous_days,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.signId!=null">
+				 #{bean.signId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.signDate!=null">
+				 #{bean.signDate},
+			</if>
+			<if test="bean.continuousDays!=null">
+				 #{bean.continuousDays},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="com.machugit.entity.po.UserSignIn">
+		 INSERT INTO user_sign_in
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.signId != null">
+				 sign_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.signDate != null">
+				 sign_date,
+			</if>
+			<if test="bean.continuousDays != null">
+				 continuous_days,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.signId!=null">
+				 #{bean.signId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.signDate!=null">
+				 #{bean.signDate},
+			</if>
+			<if test="bean.continuousDays!=null">
+				 #{bean.continuousDays},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.signId!=null">
+				 sign_id = VALUES(sign_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.signDate!=null">
+				 sign_date = VALUES(sign_date),
+			</if>
+			<if test="bean.continuousDays!=null">
+				 continuous_days = VALUES(continuous_days),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="com.machugit.entity.po.UserSignIn">
+		 INSERT INTO user_sign_in(
+			 sign_id,
+			 user_id,
+			 sign_date,
+			 continuous_days,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.signId},
+				 #{item.userId},
+				 #{item.signDate},
+				 #{item.continuousDays},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="com.machugit.entity.po.UserSignIn">
+		 INSERT INTO user_sign_in(
+			 sign_id,
+			 user_id,
+			 sign_date,
+			 continuous_days,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.signId},
+				 #{item.userId},
+				 #{item.signDate},
+				 #{item.continuousDays},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update
+			sign_id = VALUES(sign_id),
+			user_id = VALUES(user_id),
+			sign_date = VALUES(sign_date),
+			continuous_days = VALUES(continuous_days),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="com.machugit.entity.query.UserSignInQuery">
+		 UPDATE user_sign_in s
+ 		 <set>
+			<if test="bean.signId != null">
+				 sign_id = #{bean.signId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.signDate != null">
+				 sign_date = #{bean.signDate},
+			</if>
+			<if test="bean.continuousDays != null">
+				 continuous_days = #{bean.continuousDays},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete s from user_sign_in s
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据SignId修改-->
+	<update id="updateBySignId" parameterType="com.machugit.entity.po.UserSignIn">
+		 UPDATE user_sign_in
+ 		 <set>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.signDate != null">
+				 sign_date = #{bean.signDate},
+			</if>
+			<if test="bean.continuousDays != null">
+				 continuous_days = #{bean.continuousDays},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where sign_id=#{signId}
+	</update>
+
+	<!-- 根据SignId删除-->
+	<delete id="deleteBySignId">
+		delete from user_sign_in where sign_id=#{signId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectBySignId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user_sign_in s where s.sign_id=#{signId}
+	</select>
+
+	<!-- 根据UserId修改-->
+	<update id="updateByUserId" parameterType="com.machugit.entity.po.UserSignIn">
+		 UPDATE user_sign_in
+ 		 <set>
+			<if test="bean.signId != null">
+				 sign_id = #{bean.signId},
+			</if>
+			<if test="bean.signDate != null">
+				 sign_date = #{bean.signDate},
+			</if>
+			<if test="bean.continuousDays != null">
+				 continuous_days = #{bean.continuousDays},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId}
+	</update>
+
+	<!-- 根据UserId删除-->
+	<delete id="deleteByUserId">
+		delete from user_sign_in where user_id=#{userId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user_sign_in s where s.user_id=#{userId}
+	</select>
+
+</mapper>

@@ -17,6 +17,7 @@ import com.machugit.utils.CopyTools;
 import org.springframework.stereotype.Service;
 
 import com.machugit.entity.enums.PageSize;
+import com.machugit.entity.po.UserExpLog;
 import com.machugit.entity.query.UserInfoQuery;
 import com.machugit.entity.po.UserInfo;
 import com.machugit.entity.vo.PaginationResultVO;
@@ -39,6 +40,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Resource
 	private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
+
+	@Resource
+	private UserExpLogServiceImpl userExpLogService;
 
 	/**
 	 * 根据条件查询列表
@@ -214,6 +218,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 		userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
 		userInfo.setSex(UserSexEnum.UNKNOWN.getSex());
 		userInfo.setTheme(Constants.ONE);
+		userInfo.setLevel(1);
+		userInfo.setExp(0);
 		//TODO 初始化用户的硬币
 		userInfo.setCurrentCoinCount(Constants.ONE);
 		userInfo.setTotalCoinCount(Constants.ONE);
@@ -221,8 +227,16 @@ public class UserInfoServiceImpl implements UserInfoService {
 	}
 
 	/**
-     * 登录验证
-     */
+	 * 根据关键词搜索用户
+	 */
+	@Override
+	public List<UserInfo> searchUsers(String keyword) {
+		UserInfoQuery query = new UserInfoQuery();
+		query.setUseNameFuzzy(keyword);
+		query.setStatus(1);
+		return this.userInfoMapper.selectList(query);
+	}
+
 	@Override
 	public TokenUserInfoDto login(String email, String password, String ip) {
 		UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
@@ -236,6 +250,29 @@ public class UserInfoServiceImpl implements UserInfoService {
 		updateInfo.setLastLoginTime(new Date());
 		updateInfo.setLastLoginIp(ip);
 		this.userInfoMapper.updateByUserId(updateInfo, userInfo.getUserId());
+
+		// Daily login exp bonus (+5 exp, sourceType=1)
+		boolean alreadyGotToday = false;
+		java.util.List<UserExpLog> expLogs = userExpLogService.loadExpLog(userInfo.getUserId());
+		if (expLogs != null) {
+			java.util.Calendar todayCal = java.util.Calendar.getInstance();
+			java.util.Calendar logCal = java.util.Calendar.getInstance();
+			for (UserExpLog log : expLogs) {
+				if (log.getSourceType() != null && log.getSourceType() == 1 && log.getCreateTime() != null) {
+					todayCal.setTime(new Date());
+					logCal.setTime(log.getCreateTime());
+					if (todayCal.get(java.util.Calendar.YEAR) == logCal.get(java.util.Calendar.YEAR)
+							&& todayCal.get(java.util.Calendar.DAY_OF_YEAR) == logCal.get(java.util.Calendar.DAY_OF_YEAR)) {
+						alreadyGotToday = true;
+						break;
+					}
+				}
+			}
+		}
+		if (!alreadyGotToday) {
+			userExpLogService.addExp(userInfo.getUserId(), 5, 1, null);
+		}
+
 		TokenUserInfoDto tokenUserInfoDto = CopyTools.copy(userInfo, TokenUserInfoDto.class);
 		redisComponent.saveTokenInfo(tokenUserInfoDto);
 		return tokenUserInfoDto;

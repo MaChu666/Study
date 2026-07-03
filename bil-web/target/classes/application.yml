@@ -1,12 +1,12 @@
 server:
   port: 7071
   tomcat:
-    max-swallow-size: 100MB
+    max-swallow-size: 2GB
 spring:
   servlet:
     multipart:
-      max-file-size: 500MB
-      max-request-size: 500MB
+      max-file-size: 2GB
+      max-request-size: 2GB
   application:
     name: bil-web
   datasource:
@@ -41,6 +41,9 @@ mybatis:
 
 project:
   folder: d:/BilBil/bilweb
+  video:
+    upload-temp: d:/BilBil/bilweb/temp
+    output: d:/BilBil/bilweb/videos
 log:
   root:
     level: debug

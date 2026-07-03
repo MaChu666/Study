@@ -26,8 +26,7 @@ public class AppInterceptor implements HandlerInterceptor {
         "/sysSetting",
         "/video",
         "/series",
-        "/file/getResource",
-        "/file/videoResource"
+        "/file/"
     };
 
     @Resource

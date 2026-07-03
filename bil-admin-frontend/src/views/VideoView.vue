@@ -33,24 +33,26 @@
           <el-tag v-else>未知</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="280" fixed="right">
+      <el-table-column label="操作" width="320" fixed="right">
         <template #default="{ row }">
-          <template v-if="row.status === 0 || row.status === 2">
-            <el-popconfirm title="确认审核通过？" @confirm="handleAudit(row.videoId, 1, '')">
+          <div class="op-group">
+            <el-button text type="primary" size="small" @click.stop="openDetail(row)">详情</el-button>
+            <el-button text type="warning" size="small" @click.stop="openWatch(row)">观看</el-button>
+            <template v-if="row.status === 0 || row.status === 2">
+              <el-button text type="success" size="small" :loading="auditLoading[row.videoId]" @click.stop="handleAudit(row, 1)">通过</el-button>
+              <el-button text type="warning" size="small" @click.stop="openReject(row)">驳回</el-button>
+            </template>
+            <el-button v-if="row.status === 1" text type="info" size="small" :loading="auditLoading[row.videoId]" @click.stop="handleAudit(row, 3)">隐藏</el-button>
+            <el-button v-if="row.status === 3" text type="success" size="small" :loading="auditLoading[row.videoId]" @click.stop="handleAudit(row, 1)">显示</el-button>
+            <el-button text size="small" :loading="recommendLoading[row.videoId]" @click.stop="handleRecommend(row)">
+              {{ row.recommendType === 1 ? '取消推荐' : '推荐' }}
+            </el-button>
+            <el-popconfirm title="确定删除此视频？此操作不可恢复。" @confirm="handleDelete(row.videoId)">
               <template #reference>
-                <el-button text type="success" size="small">通过</el-button>
+                <el-button text type="danger" size="small" @click.stop>删除</el-button>
               </template>
             </el-popconfirm>
-            <el-button text type="warning" size="small" @click="openReject(row)">驳回</el-button>
-          </template>
-          <el-button v-if="row.status === 1" text type="info" size="small" @click="handleAudit(row.videoId, 3, '')">隐藏</el-button>
-          <el-button v-if="row.status === 3" text type="success" size="small" @click="handleAudit(row.videoId, 1, '')">显示</el-button>
-          <el-button text size="small" @click="handleRecommend(row.videoId)">{{ row.recommendType === 1 ? '取消推荐' : '推荐' }}</el-button>
-          <el-popconfirm title="确定删除此视频？此操作不可恢复。" @confirm="handleDelete(row.videoId)">
-            <template #reference>
-              <el-button text type="danger" size="small">删除</el-button>
-            </template>
-          </el-popconfirm>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -62,14 +64,39 @@
       :total="totalCount"
       layout="prev, pager, next"
       style="margin-top: 16px; justify-content: flex-end"
+      @current-change="onPageChange"
     />
 
-    <!-- Reject dialog -->
-    <el-dialog v-model="rejectVisible" title="驳回视频" width="440px">
-      <el-input v-model="rejectReason" type="textarea" :rows="3" placeholder="填写驳回原因（选填）" />
+    <!-- Watch video dialog -->
+    <el-dialog v-model="watchVisible" title="观看视频" width="800px" :close-on-click-modal="false" @closed="stopWatch">
+      <div v-if="watchVideo" style="background:#000;aspect-ratio:16/9;border-radius:8px;overflow:hidden">
+        <video :src="watchSrc" controls autoplay style="width:100%;height:100%;object-fit:contain" />
+      </div>
+    </el-dialog>
+
+    <!-- Audit confirm dialog -->
+    <el-dialog v-model="auditVisible" :title="auditDialogTitle" width="480px" :close-on-click-modal="false">
+      <div class="audit-info" v-if="auditTarget">
+        <div class="audit-info-row"><span class="label">视频标题：</span><span>{{ auditTarget.videoName }}</span></div>
+        <div class="audit-info-row"><span class="label">UP主：</span><span>{{ auditTarget.useName }}</span></div>
+        <div class="audit-info-row"><span class="label">视频ID：</span><span>{{ auditTarget.videoId }}</span></div>
+      </div>
+      <el-input
+        v-if="auditAction === 2"
+        v-model="rejectReason"
+        type="textarea"
+        :rows="3"
+        placeholder="填写驳回原因（选填）"
+        style="margin-top: 16px"
+      />
+      <p v-if="auditAction !== 2" style="margin-top: 12px; color: var(--bil-muted, #999);">
+        确认{{ auditAction === 1 ? '通过' : '隐藏' }}该视频吗？
+      </p>
       <template #footer>
-        <el-button @click="rejectVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmReject">确认驳回</el-button>
+        <el-button @click="auditVisible = false" :disabled="auditing">取消</el-button>
+        <el-button type="primary" :loading="auditing" :disabled="auditing" @click="confirmAudit">
+          {{ auditing ? '处理中...' : '确认' }}
+        </el-button>
       </template>
     </el-dialog>
 
@@ -86,6 +113,12 @@
           <el-descriptions-item label="投币">{{ detailVideo.coinCount || 0 }}</el-descriptions-item>
           <el-descriptions-item label="收藏">{{ detailVideo.collectCount || 0 }}</el-descriptions-item>
           <el-descriptions-item label="简介">{{ detailVideo.introduction || '无' }}</el-descriptions-item>
+          <el-descriptions-item label="状态">
+            <el-tag v-if="detailVideo.status === 0" type="warning">待审核</el-tag>
+            <el-tag v-else-if="detailVideo.status === 1" type="success">已审核</el-tag>
+            <el-tag v-else-if="detailVideo.status === 2" type="danger">已驳回</el-tag>
+            <el-tag v-else-if="detailVideo.status === 3" type="info">已隐藏</el-tag>
+          </el-descriptions-item>
         </el-descriptions>
       </template>
     </el-drawer>
@@ -93,8 +126,10 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 import { loadVideoListApi, auditVideoApi, deleteVideoApi, recommendVideoApi } from '@/api/modules/video'
 
 const statusFilter = ref(0)
@@ -103,9 +138,46 @@ const videoList = ref([])
 const pageNo = ref(1)
 const pageSize = ref(15)
 const totalCount = ref(0)
-const rejectVisible = ref(false)
+
+const auditVisible = ref(false)
+const auditTarget = ref(null)
+const watchVisible = ref(false)
+const watchVideo = ref(null)
+const watchSrc = computed(() => {
+  const v = watchVideo.value
+  if (!v) return ''
+  if (v.filePath) return v.filePath
+  if (v.videoUrl) return v.videoUrl
+  return ''
+})
+
+function openWatch(row) {
+  watchVideo.value = row
+  watchVisible.value = true
+  loadWatchFile(row.videoId)
+}
+
+async function loadWatchFile(videoId) {
+  try {
+    const res = await request({ url: '/video/loadVideoPList', method: 'post', data: { videoId } })
+    const files = res?.data || res
+    if (Array.isArray(files) && files.length > 0) {
+      watchVideo.value = { ...watchVideo.value, filePath: files[0].filePath }
+    }
+  } catch {}
+}
+
+function stopWatch() {
+  watchVideo.value = null
+}
+
+const auditAction = ref(0) // 1=通过, 2=驳回, 3=隐藏
 const rejectReason = ref('')
-const rejectVideoId = ref('')
+const auditing = ref(false)
+const auditDialogTitle = ref('')
+const auditLoading = reactive({})
+const recommendLoading = reactive({})
+
 const detailVisible = ref(false)
 const detailVideo = ref(null)
 
@@ -125,38 +197,81 @@ async function loadData() {
   }
 }
 
-async function handleAudit(videoId, status, reason) {
-  await auditVideoApi({ videoId, status: String(status), reason: reason || '' })
-  ElMessage.success('操作成功')
-  await loadData()
+function onPageChange() {
+  loadData()
+}
+
+async function handleAudit(row, status) {
+  // For reject, open the dialog instead
+  if (status === 2) {
+    openReject(row)
+    return
+  }
+
+  auditTarget.value = row
+  auditAction.value = status
+  rejectReason.value = ''
+  auditDialogTitle.value = status === 1 ? '审核通过' : '隐藏视频'
+  auditVisible.value = true
+}
+
+async function confirmAudit() {
+  auditing.value = true
+  try {
+    await auditVideoApi({
+      videoId: auditTarget.value.videoId,
+      status: String(auditAction.value),
+      reason: rejectReason.value || ''
+    })
+    const actionLabels = { 1: '审核通过', 2: '已驳回', 3: '已隐藏' }
+    ElMessage.success(actionLabels[auditAction.value] || '操作成功')
+    auditVisible.value = false
+    await loadData()
+  } catch (err) {
+    ElMessage.error(err?.message || '操作失败')
+  } finally {
+    auditing.value = false
+  }
 }
 
 function openReject(row) {
-  rejectVideoId.value = row.videoId
+  auditTarget.value = row
+  auditAction.value = 2
   rejectReason.value = ''
-  rejectVisible.value = true
+  auditDialogTitle.value = '驳回视频'
+  auditVisible.value = true
 }
 
-async function confirmReject() {
-  await handleAudit(rejectVideoId.value, 2, rejectReason.value)
-  rejectVisible.value = false
+function openDetail(row) {
+  detailVideo.value = row
+  detailVisible.value = true
 }
 
 async function handleDelete(videoId) {
-  await deleteVideoApi(videoId)
-  ElMessage.success('已删除')
-  await loadData()
+  try {
+    await deleteVideoApi(videoId)
+    ElMessage.success('已删除')
+    await loadData()
+  } catch (err) {
+    ElMessage.error(err?.message || '删除失败')
+  }
 }
 
-async function handleRecommend(videoId) {
-  await recommendVideoApi(videoId)
-  ElMessage.success('操作成功')
-  await loadData()
+async function handleRecommend(row) {
+  recommendLoading[row.videoId] = true
+  try {
+    await recommendVideoApi(row.videoId)
+    ElMessage.success(row.recommendType === 1 ? '已取消推荐' : '已推荐')
+    await loadData()
+  } catch (err) {
+    ElMessage.error(err?.message || '操作失败')
+  } finally {
+    recommendLoading[row.videoId] = false
+  }
 }
 
 function onRowClick(row) {
-  detailVideo.value = row
-  detailVisible.value = true
+  // Row click handled via stopPropagation on buttons
 }
 
 watch(pageNo, () => loadData())
@@ -171,16 +286,46 @@ onMounted(loadData)
   gap: 12px;
   flex-wrap: wrap;
 }
+
 .video-title-cell {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .thumb {
   width: 64px;
   height: 36px;
   object-fit: cover;
   border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.op-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.audit-info {
+  padding: 12px;
+  background: var(--el-fill-color-light, #f5f5f5);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.audit-info-row {
+  font-size: 14px;
+  color: var(--el-text-color-primary, #333);
+  display: flex;
+  gap: 4px;
+}
+
+.audit-info-row .label {
+  color: var(--el-text-color-secondary, #999);
   flex-shrink: 0;
 }
 </style>
