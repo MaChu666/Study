@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import io.seata.spring.annotation.GlobalTransactional;
 
 import com.machugit.component.RedisComponent;
 import com.machugit.entity.enums.PageSize;
@@ -337,4 +338,8 @@ public class VideoInfoServiceImpl implements VideoInfoService {
         this.redisUtils.zaddCount("video:recommend", videoId);
     }
 
+    @Override
+    public void addCoinCount(String videoId, Integer count) {
+        // TODO: implement add coin count logic
+    }
 }

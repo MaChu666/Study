@@ -82,4 +82,9 @@ public interface VideoInfoService {
      */
     void recommendVideo(String videoId);
 
+    /**
+     * 投币增加
+     */
+    void addCoinCount(String videoId, Integer count);
+
 }

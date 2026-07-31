@@ -6,21 +6,35 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="bil-comment" />
+        <module name="bil-auth" />
+        <module name="bil-gateway" />
         <module name="bil-common (1)" />
         <module name="bil-admin" />
         <module name="bil-admin (1)" />
-        <module name="bil-web" />
-        <module name="bil-common" />
+        <module name="bil-video" />
+        <module name="bil-interaction" />
         <module name="bil-web (1)" />
+        <module name="bil-user" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="bil-common" target="21" />
+      <module name="bil-web" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="bil-admin" options="-parameters" />
       <module name="bil-admin (1)" options="-parameters" />
+      <module name="bil-auth" options="-parameters" />
+      <module name="bil-comment" options="-parameters" />
       <module name="bil-common" options="-parameters" />
       <module name="bil-common (1)" options="-parameters" />
+      <module name="bil-gateway" options="-parameters" />
+      <module name="bil-interaction" options="-parameters" />
+      <module name="bil-user" options="-parameters" />
+      <module name="bil-video" options="-parameters" />
       <module name="bil-web" options="-parameters" />
       <module name="bil-web (1)" options="-parameters" />
     </option>

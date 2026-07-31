@@ -1,0 +1,60 @@
+server:
+  port: 7072
+
+spring:
+  application:
+    name: bil-auth
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/bilisql?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true&useSSL=false
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    database: 0
+    host: 192.168.5.131
+    port: 6379
+    jedis:
+      pool:
+        max-active: 20
+        max-wait: -1
+        max-idle: 10
+        min-idle: 0
+    timeout: 2000
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+project:
+  folder: D:/BilBil/bilweb
+  video:
+    upload-temp: D:/BilBil/bilweb/temp
+    output: D:/BilBil/bilweb/videos
+log:
+  root:
+    level: debug
+
+# Sentinel
+sentinel:
+  eager: true
+  transport:
+    dashboard: 192.168.5.131:8089
+    port: 8720
+
+seata:
+  enabled: true
+  application-id: bil-auth
+  tx-service-group: bil-auth-seata-service-group
+  service:
+    vgroup-mapping:
+      bil-auth-seata-service-group: default
+    grouplist:
+      default: 192.168.5.131:8091

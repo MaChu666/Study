@@ -3,6 +3,7 @@
     <div class="error-boundary-content">
       <span class="error-icon">!</span>
       <p class="error-message">页面加载出错，请刷新重试</p>
+      <p v-if="errorMessage" class="error-detail">{{ errorMessage }}</p>
       <button class="retry-btn" @click="handleRetry">刷新</button>
     </div>
   </div>
@@ -13,10 +14,12 @@
 import { onErrorCaptured, ref } from 'vue'
 
 const error = ref(null)
+const errorMessage = ref('')
 
 onErrorCaptured((err, _instance, _info) => {
   console.error('[ErrorBoundary] Captured error:', err)
   error.value = err || new Error('Unknown error')
+  errorMessage.value = err?.message || String(err)
   return false // Prevent error from propagating further
 })
 
@@ -54,6 +57,15 @@ function handleRetry() {
   align-items: center;
   justify-content: center;
   line-height: 1;
+}
+
+.error-detail {
+  color: var(--bil-muted, #999);
+  font-size: 12px;
+  max-width: 480px;
+  word-break: break-all;
+  text-align: center;
+  margin: 0;
 }
 
 .error-message {

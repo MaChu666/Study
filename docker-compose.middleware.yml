@@ -1,0 +1,97 @@
+# ============================================================
+# MACHU 视频平台 - 仅中间件一键启动（虚拟机使用）
+# 后端服务在 Windows/IDEA 运行，连接本机 IP 的中间件
+# 用法: docker compose -f docker-compose.middleware.yml up -d
+# ============================================================
+name: bil-middleware
+
+services:
+  redis:
+    image: redis:7.2
+    restart: always
+    container_name: bil-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  nacos:
+    image: nacos/nacos-server:v2.0.4
+    restart: always
+    container_name: bil-nacos
+    environment:
+      - MODE=standalone
+      - PREFER_HOST_MODE=hostname
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:4.9.7
+    restart: always
+    container_name: bil-rocketmq-namesrv
+    ports:
+      - "9876:9876"
+    command: ["sh", "mqnamesrv"]
+
+  rocketmq-broker:
+    image: apache/rocketmq:4.9.7
+    restart: always
+    container_name: bil-rocketmq-broker
+    depends_on:
+      - rocketmq-namesrv
+    environment:
+      - JAVA_OPT_EXT=-server -Xms1g -Xmx1g
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+    volumes:
+      - ./docker/rocketmq/broker.conf:/home/rocketmq/conf/broker.conf
+    command: ["sh", "mqbroker", "-n", "rocketmq-namesrv:9876", "-c", "/home/rocketmq/conf/broker.conf"]
+
+  seata:
+    image: seataio/seata-server:1.4.2
+    restart: always
+    container_name: bil-seata
+    environment:
+      - SEATA_IP=seata
+      - SERVER_PORT=8091
+    ports:
+      - "8091:8091"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.18
+    restart: always
+    container_name: bil-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  sentinel-dashboard:
+    build: ./docker/sentinel
+    restart: always
+    container_name: bil-sentinel-dashboard
+    ports:
+      - "8089:8089"
+
+volumes:
+  redis-data:
+  es-data:

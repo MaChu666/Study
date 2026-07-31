@@ -67,11 +67,10 @@ export const useUserStore = defineStore('user', {
       }
     },
     openLoginDialog() {
-      const now = Date.now()
-      if (now - this.lastLoginPromptTime < 3600000) {
+      // 登录框已显示则不重复弹；关闭后随时可再次弹出
+      if (this.loginDialogVisible) {
         return
       }
-      this.lastLoginPromptTime = now
       this.loginDialogVisible = true
     },
     markNotificationDot(value) {

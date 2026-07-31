@@ -1,4 +1,4 @@
-﻿import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -13,11 +13,11 @@ export default defineConfig({
     port: 5174,
     proxy: {
       '/videos': {
-        target: 'http://localhost:7071',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/images': {
-        target: 'http://localhost:7071',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/admin': {

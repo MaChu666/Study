@@ -85,6 +85,10 @@ service.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       clearToken()
       eventBus.emit('auth:required')
+      if (!config.silent) {
+        ElMessage.warning('请先登录')
+      }
+      return Promise.reject(error)
     }
     if (!config.silent) {
       ElMessage.error(error.message || '网络异常')

@@ -128,4 +128,9 @@ public interface UserInfoService {
 	 */
 	List<UserInfo> searchUsers(String keyword);
 
+    /**
+     * 扣减硬币
+     */
+    void deductCoin(String userId, Integer count);
+
 }

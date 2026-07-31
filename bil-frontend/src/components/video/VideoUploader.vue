@@ -35,7 +35,7 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
-import { preUploadVideoApi } from '@/api/modules/file'
+import { preUploadVideoApi, delUploadVideoApi } from '@/api/modules/file'
 
 const emit = defineEmits(['uploaded', 'removed'])
 
@@ -85,11 +85,14 @@ async function uploadChunk(blob, index, chunks, uploadId) {
 }
 
 async function handleFileChange(file) {
+  if (uploading.value) return
+
   const raw = file.raw
   if (!raw) return
 
   if (raw.size > MAX_VIDEO_SIZE) {
     ElMessage.error('视频文件不能超过 2GB')
+    uploadRef.value?.clearFiles()
     return
   }
 
@@ -99,13 +102,15 @@ async function handleFileChange(file) {
   uploading.value = true
   progress.value = 0
 
+  let uploadId = ''
   try {
     const chunks = Math.ceil(raw.size / CHUNK_SIZE)
     console.log(`[Upload] Starting: ${raw.name}, ${formatSize(raw.size)}, ${chunks} chunks, ${MAX_CONCURRENT} concurrent`)
-    const { fileId, uploadId } = await preUploadVideoApi({
+    const { fileId, uploadId: preUploadId } = await preUploadVideoApi({
       fileName: raw.name,
       chunks: String(chunks)
     })
+    uploadId = preUploadId
     console.log(`[Upload] PreUpload OK, uploadId=${uploadId}, fileId=${fileId}`)
 
     let completed = 0
@@ -145,9 +150,21 @@ async function handleFileChange(file) {
     uploadError.value = msg
     ElMessage.error(msg)
     console.error('[Upload] Failed:', msg)
+    // 清理服务端残留分片（忽略清理失败）
+    if (uploadId) {
+      try {
+        await delUploadVideoApi({ uploadId })
+      } catch { /* 忽略 */ }
+    }
     ignoreRemove = true
     uploadRef.value?.clearFiles()
     ignoreRemove = false
+    // 复位 UI 状态，允许直接重新上传
+    fileName.value = ''
+    fileSize.value = 0
+    progress.value = 0
+    uploadedFileId.value = ''
+    emit('removed')
   } finally {
     uploading.value = false
   }
@@ -162,6 +179,13 @@ function handleRemove() {
   if (!ignoreRemove) {
     emit('removed')
   }
+}
+
+function handleExceed() {
+  // limit=1 已满（如上次文件残留）：清空后允许重新选择
+  uploadRef.value?.clearFiles()
+  handleRemove()
+  ElMessage.warning('已清空旧文件，请重新选择视频文件')
 }
 
 function reset() {

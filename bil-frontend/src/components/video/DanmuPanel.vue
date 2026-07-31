@@ -39,8 +39,12 @@
 
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { loadDanmuApi, postDanmuApi } from '@/api/modules/danmu'
 import { eventBus } from '@/utils/eventBus'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
 
 const props = defineProps({
   videoId: { type: String, required: true },
@@ -122,6 +126,11 @@ function stopPolling() {
 async function post() {
   const content = text.value.trim()
   if (!content) return
+  if (!userStore.isLogin) {
+    userStore.openLoginDialog()
+    ElMessage.warning('请先登录')
+    return
+  }
   try {
     await postDanmuApi({
       videoId: props.videoId,

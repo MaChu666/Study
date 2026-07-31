@@ -1,0 +1,107 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bil-gateway
+  cloud:
+    nacos:
+      discovery:
+        watch:
+          enabled: false
+    loadbalancer:
+      nacos:
+        enabled: true
+    sentinel:
+      eager: true
+      transport:
+        dashboard: 192.168.5.131:8089
+        port: 8721
+      filter:
+        enabled: true
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      httpclient:
+        response-timeout: 30s
+        connect-timeout: 5000
+      routes:
+        - id: bil-auth-account
+          uri: lb://bil-auth
+          predicates:
+            - Path=/account/**
+          filters:
+            - RewritePath=/account/(?<segment>.*), /auth/$\{segment}
+        - id: bil-auth
+          uri: lb://bil-auth
+          predicates:
+            - Path=/auth/**
+        - id: bil-admin
+          uri: lb://bil-admin
+          predicates:
+            - Path=/admin/**
+        - id: bil-admin-sysSetting
+          uri: lb://bil-admin
+          predicates:
+            - Path=/sysSetting/**
+          filters:
+            - RewritePath=/sysSetting/(?<segment>.*), /admin/sysSetting/$\{segment}
+        - id: bil-user
+          uri: lb://bil-user
+          predicates:
+            - Path=/user/**,/ucenter/**,/uhome/**,/signIn/**,/message/**
+        - id: bil-video
+          uri: lb://bil-video
+          predicates:
+            - Path=/video/**,/file/**,/category/**,/series/**,/banner/**
+        - id: bil-interaction
+          uri: lb://bil-interaction
+          predicates:
+            - Path=/interact/**,/userAction/**,/dynamic/**,/favorite/**,/danmu/**,/history/**,/report/**
+        - id: bil-video-static
+          uri: lb://bil-video
+          predicates:
+            - Path=/videos/**,/images/**
+        - id: bil-comment
+          uri: lb://bil-comment
+          predicates:
+            - Path=/comment/**
+  redis:
+    database: 0
+    host: 192.168.5.131
+    port: 6379
+    timeout: 2000
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+
+  main:
+    allow-bean-definition-overriding: true
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+project:
+  folder: D:/BilBil/bilweb
+  video:
+    upload-temp: D:/BilBil/bilweb/temp
+    output: D:/BilBil/bilweb/videos
+
+seata:
+  enabled: true
+  application-id: bil-gateway
+  tx-service-group: bil-gateway-seata-service-group
+  service:
+    vgroup-mapping:
+      bil-gateway-seata-service-group: default
+    grouplist:
+      default: 192.168.5.131:8091

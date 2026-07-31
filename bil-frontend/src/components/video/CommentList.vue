@@ -249,6 +249,7 @@ async function post() {
   if (!nextContent) return
   if (!userStore.isLogin) {
     userStore.openLoginDialog()
+    ElMessage.warning('请先登录')
     return
   }
   try {
@@ -280,6 +281,7 @@ async function postReply(parent) {
   if (!nextContent) return
   if (!userStore.isLogin) {
     userStore.openLoginDialog()
+    ElMessage.warning('请先登录')
     return
   }
   try {
@@ -314,6 +316,7 @@ async function postReply(parent) {
 function toggleReplyInput(comment) {
   if (!userStore.isLogin) {
     userStore.openLoginDialog()
+    ElMessage.warning('请先登录')
     return
   }
   replyingTo.value = replyingTo.value === comment.commentId ? null : comment.commentId

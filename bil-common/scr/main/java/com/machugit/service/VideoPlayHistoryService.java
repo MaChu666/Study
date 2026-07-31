@@ -24,4 +24,9 @@ public interface VideoPlayHistoryService {
      * 清空播放历史
      */
     void cleanHistory(String userId);
+
+    /**
+     * 增加播放量
+     */
+    void addPlayCount(String videoId);
 }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.MACHUbil</groupId>
+        <artifactId>Git</artifactId>
+        <version>1.0</version>
+    </parent>
+    <artifactId>bil-interaction</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+    <build><sourceDirectory>scr/main/java</sourceDirectory>
+        <resources>
+            <resource><directory>scr/main/resources</directory></resource>
+            <resource><directory>scr</directory><includes><include>**/*.xml</include></includes></resource>
+        </resources>
+        <plugins><plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration><mainClass>com.machugit.interaction.BilInteractionApplication</mainClass></configuration>
+        </plugin></plugins>
+    </build>
+    <dependencies>
+        <dependency><groupId>com.MACHUbil</groupId><artifactId>bil-common</artifactId><version>1.0</version></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId>
+            <exclusions><exclusion><groupId>org.apache.tomcat</groupId><artifactId>annotations-api</artifactId></exclusion></exclusions>
+        </dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId></dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId></dependency>
+        <dependency><groupId>org.springframework.cloud</groupId><artifactId>spring-cloud-starter-bootstrap</artifactId></dependency>
+        <dependency><groupId>org.springframework.cloud</groupId><artifactId>spring-cloud-starter-openfeign</artifactId></dependency>
+        <dependency><groupId>org.springframework.cloud</groupId><artifactId>spring-cloud-starter-loadbalancer</artifactId></dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-sentinel</artifactId></dependency>
+        <dependency><groupId>com.alibaba.cloud</groupId><artifactId>spring-cloud-starter-alibaba-seata</artifactId></dependency>
+        <dependency><groupId>org.apache.rocketmq</groupId><artifactId>rocketmq-spring-boot-starter</artifactId>
+            <exclusions><exclusion><groupId>org.apache.tomcat</groupId><artifactId>annotations-api</artifactId></exclusion></exclusions>
+        </dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-redis</artifactId></dependency>
+        <dependency><groupId>org.redisson</groupId><artifactId>redisson-spring-boot-starter</artifactId><version>3.17.7</version></dependency>
+        <dependency><groupId>mysql</groupId><artifactId>mysql-connector-java</artifactId></dependency>
+        <dependency><groupId>ch.qos.logback</groupId><artifactId>logback-classic</artifactId></dependency>
+    </dependencies>
+</project>

@@ -25,3 +25,9 @@ replay_pid*
 
 # Local Codex worktrees
 .worktrees/
+
+# Maven build output
+target/
+
+# IDE
+*.iml

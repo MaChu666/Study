@@ -17,20 +17,20 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/api': {
-          target: env.VITE_API_PROXY_TARGET || 'http://localhost:7071',
+          target: env.VITE_API_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
           rewrite: rewriteApiPrefix ? (path) => path.replace(/^\/api/, '') : (path) => path,
           timeout: 300000,
           proxyTimeout: 300000
         },
         '/videos': {
-          target: env.VITE_API_PROXY_TARGET || 'http://localhost:7071',
+          target: env.VITE_API_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
           timeout: 300000,
           proxyTimeout: 300000
         },
         '/images': {
-          target: env.VITE_API_PROXY_TARGET || 'http://localhost:7071',
+          target: env.VITE_API_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
           timeout: 300000,
           proxyTimeout: 300000

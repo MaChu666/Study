@@ -1,0 +1,33 @@
+# Maven
+target/
+*.class
+*.jar
+!docker/sentinel/sentinel-dashboard-1.8.6.jar
+
+# Node / Frontend
+node_modules/
+bil-frontend/node_modules/
+bil-admin-frontend/node_modules/
+bil-frontend/dist/
+bil-admin-frontend/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temp
+temp/

@@ -15,6 +15,7 @@ import com.machugit.entity.enums.UserStatusEnum;
 import com.machugit.exception.BusinessException;
 import com.machugit.utils.CopyTools;
 import org.springframework.stereotype.Service;
+import io.seata.spring.annotation.GlobalTransactional;
 
 import com.machugit.entity.enums.PageSize;
 import com.machugit.entity.po.UserExpLog;
@@ -199,7 +200,8 @@ public class UserInfoServiceImpl implements UserInfoService {
      * 注册验证
      */
 	@Override
-	public void register(String email, String useName, String registerPassword) {
+	@GlobalTransactional(name = "user:register", rollbackFor = Exception.class)
+    public void register(String email, String useName, String registerPassword) {
 		UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
 		if (null != userInfo) {
 			throw new BusinessException("邮箱已注册");
@@ -280,4 +282,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 		redisComponent.saveTokenInfo(tokenUserInfoDto);
 		return tokenUserInfoDto;
 	}
+
+    @Override
+    public void deductCoin(String userId, Integer count) {
+        // TODO: implement deduct coin logic
+    }
 }

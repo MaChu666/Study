@@ -22,18 +22,22 @@ public class Appinterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if(null==handler) {
+        if (null == handler) {
             return false;
         }
-        if(request.getRequestURI().startsWith(ACCOUNT_URL)) {
+        if (request.getRequestURI().startsWith(ACCOUNT_URL)) {
             return true;
         }
-        String token = getTokenFromCookie(request);
-        if(StringTools.isEmpty(token)) {
+        // Check header first, then cookie (consistent with ABaseController)
+        String token = request.getHeader(Constants.TOKEN_ADMIN);
+        if (StringTools.isEmpty(token)) {
+            token = getTokenFromCookie(request);
+        }
+        if (StringTools.isEmpty(token)) {
             throw new BusinessException(ResponseCodeEnum.CODE_901);
         }
         Object sessionObj = redisComponent.getAdminTokenUserInfo(token);
-        if(null==sessionObj) {
+        if (null == sessionObj) {
             throw new BusinessException(ResponseCodeEnum.CODE_901);
         }
         return true;
@@ -41,11 +45,11 @@ public class Appinterceptor implements HandlerInterceptor {
 
     private String getTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if(cookies==null) {
+        if (cookies == null) {
             return null;
         }
-        for(Cookie cookie:cookies) {
-            if(cookie.getName().equals(Constants.TOKEN_ADMIN)) {
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals(Constants.TOKEN_ADMIN)) {
                 return cookie.getValue();
             }
         }

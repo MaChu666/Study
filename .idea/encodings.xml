@@ -6,8 +6,17 @@
     <file url="file://$PROJECT_DIR$/.worktrees/bil-frontend-mvp/bil-web/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/.worktrees/bil-frontend-mvp/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/.worktrees/bil-frontend-mvp/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-admin/scr/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bil-admin/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-auth/scr/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-comment/scr/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-common/scr/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bil-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-gateway/scr/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-interaction/scr/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-user/scr/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-video/scr/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bil-web/scr/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bil-web/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />

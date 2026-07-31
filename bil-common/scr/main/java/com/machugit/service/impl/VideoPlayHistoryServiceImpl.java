@@ -49,4 +49,9 @@ public class VideoPlayHistoryServiceImpl implements VideoPlayHistoryService {
         query.setUserId(userId);
         this.videoPlayHistoryMapper.deleteByParam(query);
     }
+
+    @Override
+    public void addPlayCount(String videoId) {
+        // TODO: implement add play count logic
+    }
 }

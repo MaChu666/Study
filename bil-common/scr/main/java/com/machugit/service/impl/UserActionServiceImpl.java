@@ -102,8 +102,8 @@ public class UserActionServiceImpl implements UserActionService {
                 Long likeCount = videoInfo.getLikeCount() == null ? 0L : videoInfo.getLikeCount();
                 VideoInfo updateInfo = new VideoInfo();
                 updateInfo.setLikeCount(likeCount + count);
-            try { userExpLogService.addExp(userId, 10, 2, videoId); } catch (Exception _) {}
-            try { userExpLogService.addExp(videoInfo.getUserId(), 1, 2, videoId); } catch (Exception _) {}
+            try { userExpLogService.addExp(userId, 10, 2, videoId); } catch (Exception ignored) {}
+            try { userExpLogService.addExp(videoInfo.getUserId(), 1, 2, videoId); } catch (Exception ignored) {}
                 this.videoInfoMapper.updateByVideoId(updateInfo, videoId);
             }
         }
@@ -129,8 +129,8 @@ public class UserActionServiceImpl implements UserActionService {
             Long coinCount = videoInfo.getCoinCount() == null ? 0L : videoInfo.getCoinCount();
             VideoInfo updateInfo = new VideoInfo();
             updateInfo.setCoinCount(coinCount + count);
-            try { userExpLogService.addExp(userId, 10, 2, videoId); } catch (Exception _) {}
-            try { userExpLogService.addExp(videoInfo.getUserId(), 1, 2, videoId); } catch (Exception _) {}
+            try { userExpLogService.addExp(userId, 10, 2, videoId); } catch (Exception ignored) {}
+            try { userExpLogService.addExp(videoInfo.getUserId(), 1, 2, videoId); } catch (Exception ignored) {}
             this.videoInfoMapper.updateByVideoId(updateInfo, videoId);
             this.coinTransactionLogService.addCoinTransaction(userId, videoId, count);
 

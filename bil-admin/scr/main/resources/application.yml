@@ -4,12 +4,12 @@ server:
     max-http-form-post-size: 50MB
   servlet:
     context-path: /admin
+
 spring:
   servlet:
     multipart:
       max-file-size: 2GB
       max-request-size: 2GB
-
   application:
     name: bil-admin
   datasource:
@@ -27,7 +27,7 @@ spring:
       connection-test-query: SELECT 1
   redis:
     database: 0
-    host: 127.0.0.1
+    host: 192.168.5.131
     port: 6379
     jedis:
       pool:
@@ -36,13 +36,13 @@ spring:
         max-idle: 10
         min-idle: 0
     timeout: 2000
-
-
   elasticsearch:
-    uris: http://localhost:9200
+    enabled: true
+    uris: http://192.168.5.131:9200
     connection-timeout: 3s
     socket-timeout: 5s
-#mybatis 婵犮垹鐖㈤崘顏呯槗闂佸憡鍔栭悷銊ッ归崱妯镐粴闁绘挸楠稿Σ?
+
+# MyBatis 配置
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
@@ -52,11 +52,28 @@ project:
   video:
     upload-temp: d:/BilBil/bilweb/temp
     output: d:/BilBil/bilweb/videos
+
 log:
   root:
     level: debug
+
 admin:
   account: admin
   password: admin123
 
+# Sentinel 流控熔断降级
+sentinel:
+  eager: true
+  transport:
+    dashboard: 192.168.5.131:8089
+    port: 8722
 
+seata:
+  enabled: true
+  application-id: bil-admin
+  tx-service-group: bil-admin-seata-service-group
+  service:
+    vgroup-mapping:
+      bil-admin-seata-service-group: default
+    grouplist:
+      default: 192.168.5.131:8091
