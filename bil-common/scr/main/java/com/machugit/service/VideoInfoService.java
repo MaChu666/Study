@@ -23,6 +23,11 @@ public interface VideoInfoService {
     PaginationResultVO<VideoInfo> loadVideo(Integer pCategoryId, Integer categoryId, Integer pageNo);
 
     /**
+     * 分页加载视频（支持排序，orderBy 仅接受白名单值）
+     */
+    PaginationResultVO<VideoInfo> loadVideo(Integer pCategoryId, Integer categoryId, Integer pageNo, String orderBy);
+
+    /**
      * 获取视频详情
      */
     VideoInfo getVideoInfo(String videoId);
@@ -88,3 +93,4 @@ public interface VideoInfoService {
     void addCoinCount(String videoId, Integer count);
 
 }
+

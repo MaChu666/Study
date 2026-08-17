@@ -1370,7 +1370,7 @@ watch(
 
 .edit-icon-btn:hover {
   background: var(--bil-hover);
-  color: var(--bil-primary);
+  color: var(--bil-pink);
 }
 
 .name-edit-input {
@@ -1390,7 +1390,7 @@ watch(
   font-size: 13px;
   cursor: pointer;
 }
-.name-save-btn { background: var(--bil-primary); color: #fff; }
+.name-save-btn { background: var(--bil-pink); color: #fff; }
 .name-cancel-btn { background: var(--bil-hover); color: var(--bil-muted); }
 
 .signature-edit-row {
@@ -1417,7 +1417,7 @@ watch(
   padding: 0 14px;
   border: 0;
   border-radius: 6px;
-  background: var(--bil-primary);
+  background: var(--bil-pink);
   color: #fff;
   font-size: 13px;
   cursor: pointer;
@@ -1425,7 +1425,7 @@ watch(
 }
 
 .sig-save-btn:hover {
-  background: var(--bil-primary-hover);
+  background: var(--bil-pink-hover);
 }
 
 .sig-cancel-btn {
@@ -1518,8 +1518,8 @@ watch(
 }
 
 .tab-btn.active {
-  color: var(--bil-primary);
-  border-bottom-color: var(--bil-primary);
+  color: var(--bil-pink);
+  border-bottom-color: var(--bil-pink);
   font-weight: 600;
 }
 
@@ -1542,7 +1542,7 @@ watch(
   width: 32px;
   height: 32px;
   border: 3px solid var(--bil-border);
-  border-top-color: var(--bil-primary);
+  border-top-color: var(--bil-pink);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   margin-bottom: 10px;
@@ -1553,7 +1553,7 @@ watch(
   width: 14px;
   height: 14px;
   border: 2px solid var(--bil-border);
-  border-top-color: var(--bil-primary);
+  border-top-color: var(--bil-pink);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   vertical-align: middle;
@@ -1605,8 +1605,8 @@ watch(
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 24px 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px 16px;
 }
 
 .load-more-wrap {
@@ -1631,7 +1631,8 @@ watch(
 
 .load-more-btn:hover:not(:disabled) {
   background: var(--bil-hover);
-  border-color: var(--bil-primary);
+  border-color: var(--bil-pink);
+  color: var(--bil-pink);
 }
 
 .load-more-btn:disabled {
@@ -1915,10 +1916,11 @@ watch(
 
 /* ---- Follow / PM buttons ---- */
 .follow-btn {
-  padding: 4px 14px; border: 1px solid var(--bil-primary);
-  border-radius: 6px; background: var(--bil-primary); color: #fff;
+  padding: 4px 14px; border: 1px solid var(--bil-pink);
+  border-radius: 6px; background: var(--bil-pink); color: #fff;
   font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
 }
+.follow-btn:hover { background: var(--bil-pink-hover); border-color: var(--bil-pink-hover); }
 .follow-btn.is-following {
   background: transparent; color: var(--bil-text); border-color: var(--bil-border);
 }
@@ -2188,3 +2190,4 @@ watch(
   }
 }
 </style>
+

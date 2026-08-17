@@ -40,7 +40,7 @@ public class DanmuInfoServiceImpl implements DanmuInfoService {
      * 发布弹幕
      */
     @Override
-    public void postDanmu(String userId, String videoId, String fileId, String text, Integer mode, String color, Long time) {
+    public void postDanmu(String userId, String videoId, String fileId, String text, Integer mode, String color, Integer fontSize, Integer isPrior, Integer danmuType, Long time, Long jumpTime) {
         DanmuInfo danmuInfo = new DanmuInfo();
         danmuInfo.setUserId(userId);
         danmuInfo.setVideoId(videoId);
@@ -48,7 +48,11 @@ public class DanmuInfoServiceImpl implements DanmuInfoService {
         danmuInfo.setText(text);
         danmuInfo.setMode(mode);
         danmuInfo.setColor(color);
+        danmuInfo.setFontSize(fontSize);
+        danmuInfo.setIsPrior(isPrior);
+        danmuInfo.setDanmuType(danmuType);
         danmuInfo.setTime(time);
+        danmuInfo.setJumpTime(jumpTime);
         danmuInfo.setPostTime(new Date());
         this.danmuInfoMapper.insert(danmuInfo);
 

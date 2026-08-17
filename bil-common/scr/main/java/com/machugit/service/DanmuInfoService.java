@@ -15,7 +15,7 @@ public interface DanmuInfoService {
     /**
      * 发布弹幕
      */
-    void postDanmu(String userId, String videoId, String fileId, String text, Integer mode, String color, Long time);
+    void postDanmu(String userId, String videoId, String fileId, String text, Integer mode, String color, Integer fontSize, Integer isPrior, Integer danmuType, Long time, Long jumpTime);
 
     /**
      * 加载弹幕

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.machugit.entity.dto.TokenUserInfoDto;
-import com.machugit.entity.po.CommentInfo;
+import com.machugit.entity.vo.CommentVO;
 import com.machugit.entity.vo.ResponseVO;
 import com.machugit.exception.BusinessException;
 import com.machugit.service.impl.CommentInfoServiceImpl;
@@ -47,7 +47,7 @@ public class CommentController extends com.machugit.controller.ABaseController {
                                   @NotEmpty String orderType) {
         Integer pageNoInt = Integer.parseInt(pageNo);
         Integer orderTypeInt = Integer.parseInt(orderType);
-        List<CommentInfo> list = commentInfoService.loadComment(videoId, pageNoInt, orderTypeInt);
+        List<CommentVO> list = commentInfoService.loadComment(videoId, pageNoInt, orderTypeInt);
         return getSuccessResponseVO(list);
     }
 

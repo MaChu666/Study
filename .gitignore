@@ -31,3 +31,13 @@ target/
 
 # IDE
 *.iml
+
+# 个人文件（不提交）
+个人简历*.docx
+微信图片*.jpg
+
+# 前端运行日志
+*.err
+
+# 第三方参考克隆（363MB，含 node_modules 与嵌套 .git，前端已集成到 src/libs/）
+/third-party/

@@ -22,7 +22,10 @@
 
     <!-- Post input -->
     <div class="post-row">
-      <div class="comment-avatar">{{ currentUserAvatar }}</div>
+      <div class="comment-avatar">
+        <img v-if="currentUserAvatarImg" :src="currentUserAvatarImg" class="comment-avatar-img" alt="" />
+        <template v-else>{{ currentUserAvatar }}</template>
+      </div>
       <div class="post-input-wrap">
         <textarea
           v-model="content"
@@ -42,10 +45,14 @@
     <!-- Comment threads -->
     <div v-for="item in topLevelComments" :key="item.commentId" class="comment-thread">
       <div class="comment-item">
-        <div class="comment-avatar">{{ getAvatar(item.userName) }}</div>
+        <div class="comment-avatar">
+          <img v-if="item.avatar" :src="item.avatar" class="comment-avatar-img" alt="" />
+          <template v-else>{{ getAvatar(item.userName) }}</template>
+        </div>
         <div class="comment-body">
           <div class="comment-header">
             <span class="comment-username">{{ item.userName || 'VidVault 用户' }}</span>
+            <span v-if="isAuthor(item)" class="up-badge">UP主</span>
             <span class="comment-time">{{ timeAgo(item.postTime) }}</span>
           </div>
           <p class="comment-content">{{ item.content }}</p>
@@ -96,10 +103,14 @@
             :key="reply.commentId"
             class="comment-item reply-item"
           >
-            <div class="comment-avatar small">{{ getAvatar(reply.userName) }}</div>
+            <div class="comment-avatar small">
+              <img v-if="reply.avatar" :src="reply.avatar" class="comment-avatar-img" alt="" />
+              <template v-else>{{ getAvatar(reply.userName) }}</template>
+            </div>
             <div class="comment-body">
               <div class="comment-header">
                 <span class="comment-username">{{ reply.userName || 'VidVault 用户' }}</span>
+                <span v-if="isAuthor(reply)" class="up-badge">UP主</span>
                 <span class="comment-time">{{ timeAgo(reply.postTime) }}</span>
               </div>
               <p class="comment-content">{{ reply.content }}</p>
@@ -135,7 +146,8 @@ import { loadCommentApi, postCommentApi, userDelCommentApi } from '@/api/modules
 import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
-  videoId: { type: String, required: true }
+  videoId: { type: String, required: true },
+  authorId: { type: String, default: '' }
 })
 
 const userStore = useUserStore()
@@ -151,6 +163,7 @@ const loading = ref(false)
 const expandedReplies = reactive({})
 
 // --- computed ---
+const currentUserAvatarImg = computed(() => userStore.profile?.avatar || '')
 const currentUserAvatar = computed(() => {
   const name = userStore.profile?.userName || '我'
   return (name || '我')[0]
@@ -196,6 +209,10 @@ function timeAgo(dateStr) {
   if (months < 12) return `${months}个月前`
   const years = Math.floor(months / 12)
   return `${years}年前`
+}
+
+function isAuthor(comment) {
+  return Boolean(props.authorId && String(comment.userId) === String(props.authorId))
 }
 
 function isOwnComment(comment) {
@@ -259,18 +276,10 @@ async function post() {
       replyCommentId: '0',
       imgPath: ''
     })
-    allComments.value.unshift({
-      commentId: Date.now(),
-      userId: userStore.profile?.userId,
-      userName: userStore.profile?.userName || '我',
-      content: nextContent,
-      replyCommentId: '0',
-      replyCount: 0,
-      postTime: new Date().toISOString()
-    })
     content.value = ''
     replyingTo.value = null
     replyContent.value = ''
+    await load()
   } catch {
     ElMessage.error('发布失败，请稍后再试')
   }
@@ -291,23 +300,10 @@ async function postReply(parent) {
       replyCommentId: String(parent.commentId),
       imgPath: ''
     })
-    allComments.value.push({
-      commentId: Date.now() + Math.random(),
-      userId: userStore.profile?.userId,
-      userName: userStore.profile?.userName || '我',
-      content: nextContent,
-      replyCommentId: String(parent.commentId),
-      replyCount: 0,
-      postTime: new Date().toISOString()
-    })
-    // Update parent replyCount
-    const parentComment = allComments.value.find(c => String(c.commentId) === String(parent.commentId))
-    if (parentComment) {
-      parentComment.replyCount = (parentComment.replyCount || 0) + 1
-    }
     replyContent.value = ''
     replyingTo.value = null
     expandedReplies[String(parent.commentId)] = true
+    await load()
   } catch {
     ElMessage.error('回复失败，请稍后再试')
   }
@@ -467,6 +463,13 @@ h2 {
   user-select: none;
 }
 
+.comment-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .comment-avatar.small {
   width: 30px;
   height: 30px;
@@ -505,6 +508,18 @@ h2 {
   font-weight: 600;
   font-size: 13px;
   color: var(--bil-primary, #00a1d6);
+}
+
+.up-badge {
+  flex-shrink: 0;
+  margin-left: -4px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--bil-pink);
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
 }
 
 .comment-time {

@@ -49,6 +49,12 @@
       </router-link>
     </nav>
 
+        <!-- Mobile sidebar drawer -->
+    <div v-if="mobileSidebarVisible" class="mobile-overlay" @click="toggleMobileSidebar" />
+    <div class="mobile-drawer" :class="{ open: mobileSidebarVisible }">
+      <SideCategoryNav :mobile-visible="true" />
+    </div>
+
     <GlobalMiniPlayer />
     <LoginDialog />
   </div>
@@ -109,7 +115,7 @@ onUnmounted(() => {
 .layout-body {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 84px 24px 96px;
+  padding: calc(var(--bil-header-h) + 16px) 24px 96px;
 }
 
 .content {
@@ -121,7 +127,41 @@ onUnmounted(() => {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 50;
+  z-index: 90;
+}
+
+/* Mobile sidebar drawer */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  padding: calc(var(--bil-header-h) + 12px) 12px 24px;
+  background: var(--bil-surface);
+  box-shadow: var(--bil-shadow-lg);
+  z-index: 95;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+}
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+@media (min-width: 761px) {
+  .mobile-drawer {
+    display: none;
+  }
+}
+
+.mobile-drawer :deep(.side-nav) {
+  position: static;
+  top: auto;
+  left: auto;
+  width: 100%;
+  height: auto;
+  box-shadow: none;
+  padding: 0;
 }
 
 /* Bottom navigation bar */
@@ -199,3 +239,5 @@ onUnmounted(() => {
 }
 
 </style>
+
+

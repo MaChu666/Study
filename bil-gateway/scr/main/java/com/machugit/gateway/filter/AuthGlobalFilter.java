@@ -40,6 +40,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         "/file/videoResource",
         "/comment/loadComment",
         "/danmu/loadDanmu",
+        "/dynamic/loadDynamics",
         "/uhome/getUserInfo",
         "/uhome/loadVideoList",
         "/uhome/loadUserCollection",

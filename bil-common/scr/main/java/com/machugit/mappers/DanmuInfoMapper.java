@@ -14,6 +14,12 @@ public interface DanmuInfoMapper<T,P> extends BaseMapper<T,P> {
 
 
 	/**
+	 * 举报次数加一
+	 */
+	 Integer incrementReportCountByDanmuId(@Param("danmuId") Integer danmuId);
+
+
+	/**
 	 * 根据DanmuId删除
 	 */
 	 Integer deleteByDanmuId(@Param("danmuId") Integer danmuId);

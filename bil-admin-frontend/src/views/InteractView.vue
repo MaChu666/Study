@@ -34,19 +34,37 @@
           <el-table-column prop="danmuId" label="ID" width="80" />
           <el-table-column prop="videoId" label="视频ID" width="140" />
           <el-table-column prop="videoName" label="视频名称" />
-          <el-table-column prop="userId" label="用户ID" width="140" />
+          <el-table-column label="用户" width="150">
+            <template #default="{ row }">
+              <div class="user-cell">
+                <span class="user-name">{{ row.userName || row.userId }}</span>
+                <span class="user-id">{{ row.userId }}</span>
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column prop="text" label="弹幕内容" min-width="180" show-overflow-tooltip />
+          <el-table-column label="举报次数" width="90" align="center">
+            <template #default="{ row }">
+              <el-tag v-if="row.reportCount > 0" type="danger" size="small">{{ row.reportCount }}</el-tag>
+              <span v-else class="report-zero">0</span>
+            </template>
+          </el-table-column>
           <el-table-column label="颜色" width="80">
             <template #default="{ row }">
               <span :style="{ color: row.color || '#fff' }">●</span>
             </template>
           </el-table-column>
           <el-table-column prop="postTime" label="发布时间" width="180" />
-          <el-table-column label="操作" width="120" fixed="right">
+          <el-table-column label="操作" width="180" fixed="right">
             <template #default="{ row }">
               <el-popconfirm title="确定删除此弹幕？" @confirm="handleDelDanmu(row.danmuId)">
                 <template #reference>
                   <el-button text type="danger" size="small">删除</el-button>
+                </template>
+              </el-popconfirm>
+              <el-popconfirm title="确定封禁该用户？封禁后无法登录" @confirm="handleBanUser(row.userId)">
+                <template #reference>
+                  <el-button text type="warning" size="small">封禁用户</el-button>
                 </template>
               </el-popconfirm>
             </template>
@@ -61,6 +79,7 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { loadCommentApi, delCommentApi, loadDanmuApi, delDanmuApi } from '@/api/modules/interact'
+import { changeStatusApi } from '@/api/modules/user'
 
 const activeTab = ref('comment')
 const commentList = ref([])
@@ -98,6 +117,15 @@ async function handleDelDanmu(danmuId) {
   await loadDanmu()
 }
 
+async function handleBanUser(userId) {
+  try {
+    await changeStatusApi(userId, 0)
+    ElMessage.success('已封禁该用户')
+  } catch {
+    ElMessage.error('封禁失败，请稍后再试')
+  }
+}
+
 function onTabChange(name) {
   if (name === 'comment') loadComments()
   else loadDanmu()
@@ -111,5 +139,25 @@ onMounted(loadComments)
   margin-bottom: 16px;
   display: flex;
   gap: 12px;
+}
+
+.user-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+
+.user-name {
+  color: #333;
+  font-weight: 500;
+}
+
+.user-id {
+  color: #999;
+  font-size: 12px;
+}
+
+.report-zero {
+  color: #bbb;
 }
 </style>

@@ -9,6 +9,7 @@ const routes = [
     children: [
       { path: '', name: 'home', component: () => import('@/views/HomeView.vue') },
       { path: 'search', name: 'search', component: () => import('@/views/SearchView.vue') },
+      { path: 'category/:categoryId?', name: 'category', component: () => import('@/views/CategoryView.vue') },
       { path: 'video/:videoId', name: 'video-detail', component: () => import('@/views/VideoDetailView.vue') },
       { path: 'user/:userId?', name: 'user-home', component: () => import('@/views/UserHomeView.vue') },
       { path: 'creator', name: 'creator', meta: { requiresAuth: true }, component: () => import('@/views/CreatorCenterView.vue') },

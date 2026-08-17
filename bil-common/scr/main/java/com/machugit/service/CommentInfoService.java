@@ -15,7 +15,7 @@ public interface CommentInfoService {
     /**
      * 加载评论
      */
-    List<CommentInfo> loadComment(String videoId, Integer pageNo, Integer orderType);
+    List<CommentVO> loadComment(String videoId, Integer pageNo, Integer orderType);
 
     /**
      * 发布评论

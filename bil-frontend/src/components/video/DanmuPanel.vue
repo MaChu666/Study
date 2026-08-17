@@ -24,7 +24,7 @@
         <span class="danmu-time">{{ formatVideoTime(item.time) }}</span>
         <span
           class="danmu-bubble"
-          :style="{ color: item.color || '#ffffff' }"
+          :style="bubbleStyle(item)"
         >{{ item.text }}</span>
       </div>
     </div>
@@ -49,6 +49,7 @@ const userStore = useUserStore()
 const props = defineProps({
   videoId: { type: String, required: true },
   fileId: { type: String, default: '' },
+  currentTime: { type: Number, default: 0 },
   settings: {
     type: Object,
     default: () => ({ on: true, opacity: 0.8, fontSize: 'normal', area: 'full', speed: 'normal' })
@@ -66,11 +67,19 @@ let pollTimer = null
 /* ============================
    Format time (seconds → MM:SS)
    ============================ */
-function formatVideoTime(seconds) {
-  const s = Math.floor(Number(seconds) || 0)
-  const m = Math.floor(s / 60)
-  const sec = s % 60
-  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+function bubbleStyle(item) {
+  const color = item?.color
+  const lower = String(color || '').toLowerCase()
+  if (color && lower !== '#ffffff' && lower !== '#fff' && lower !== 'white') {
+    return { color }
+  }
+  return { color: 'var(--bil-text)' }
+}
+function formatVideoTime(ms) {
+  const totalSeconds = Math.floor((Number(ms) || 0) / 1000)
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 /* ============================
@@ -138,7 +147,9 @@ async function post() {
       text: content,
       mode: 1,
       color: '#ffffff',
-      time: 0
+      fontSize: 20,
+      isPrior: 1,
+      time: Math.floor(Number(props.currentTime) || 0) * 1000
     })
     text.value = ''
     eventBus.emit('danmu:posted', props.videoId)

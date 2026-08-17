@@ -75,6 +75,14 @@ public class VideoInfoServiceImpl implements VideoInfoService {
      */
     @Override
     public PaginationResultVO<VideoInfo> loadVideo(Integer pCategoryId, Integer categoryId, Integer pageNo) {
+        return loadVideo(pCategoryId, categoryId, pageNo, null);
+    }
+
+    /**
+     * 分页加载视频（支持排序，orderBy 仅接受白名单值）
+     */
+    @Override
+    public PaginationResultVO<VideoInfo> loadVideo(Integer pCategoryId, Integer categoryId, Integer pageNo, String orderBy) {
         VideoInfoQuery query = new VideoInfoQuery();
         if (pCategoryId != null && pCategoryId > 0) {
             query.setPCategoryId(pCategoryId);
@@ -86,13 +94,29 @@ public class VideoInfoServiceImpl implements VideoInfoService {
         query.setIsDeleted(0);
         query.setPageNo(pageNo);
         query.setPageSize(PageSize.SIZE15.getSize());
-        query.setOrderBy("create_time desc");
+        query.setOrderBy(whitelistOrderBy(orderBy));
 
         int count = this.videoInfoMapper.selectCount(query);
         SimplePage page = new SimplePage(pageNo, count, PageSize.SIZE15.getSize());
         query.setSimplePage(page);
         List<VideoInfo> list = this.videoInfoMapper.selectList(query);
         return new PaginationResultVO<VideoInfo>(count, page.getPageSize(), page.getPageNo(), page.getPageTotal(), list);
+    }
+
+    /**
+     * 排序白名单，防止 orderBy 注入
+     */
+    private String whitelistOrderBy(String orderBy) {
+        if ("play_count desc".equals(orderBy)) {
+            return "play_count desc";
+        }
+        if ("danmu_count desc".equals(orderBy)) {
+            return "danmu_count desc";
+        }
+        if ("like_count desc".equals(orderBy)) {
+            return "like_count desc";
+        }
+        return "create_time desc";
     }
 
     /**

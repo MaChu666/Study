@@ -41,12 +41,40 @@ public class CommentInfoServiceImpl implements CommentInfoService {
      * 加载评论
      */
     @Override
-    public List<CommentInfo> loadComment(String videoId, Integer pageNo, Integer orderType) {
+    public List<CommentVO> loadComment(String videoId, Integer pageNo, Integer orderType) {
         CommentInfoQuery query = new CommentInfoQuery();
         query.setVideoId(videoId);
         query.setPageNo(pageNo);
         query.setOrderBy(orderType == 0 ? "create_time desc" : "create_time asc");
-        return this.commentInfoMapper.selectList(query);
+        List<CommentInfo> commentList = this.commentInfoMapper.selectList(query);
+        if (commentList == null || commentList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        // 批量查询评论用户信息（昵称、头像）
+        Set<String> userIds = commentList.stream()
+                .map(CommentInfo::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<String, UserInfo> userMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<UserInfo> userList = userInfoMapper.selectByUserIds(userIds);
+            if (userList != null) {
+                userMap = userList.stream()
+                        .collect(Collectors.toMap(UserInfo::getUserId, user -> user));
+            }
+        }
+        List<CommentVO> result = new ArrayList<>();
+        for (CommentInfo comment : commentList) {
+            CommentVO vo = new CommentVO();
+            BeanUtils.copyProperties(comment, vo);
+            UserInfo user = userMap.get(comment.getUserId());
+            if (user != null) {
+                vo.setUserName(user.getUseName());
+                vo.setAvatar(user.getAvatar());
+            }
+            result.add(vo);
+        }
+        return result;
     }
 
     /**
@@ -66,7 +94,10 @@ public class CommentInfoServiceImpl implements CommentInfoService {
             commentInfo.setRoot(0);
         } else {
             CommentInfo parent = this.commentInfoMapper.selectByCommentId(replyCommentId);
-            if (parent != null && parent.getRoot() != null && parent.getRoot() > 0) {
+            if (parent == null) {
+                throw new BusinessException("被回复的评论不存在或已删除");
+            }
+            if (parent.getRoot() != null && parent.getRoot() > 0) {
                 commentInfo.setRoot(parent.getRoot());
             } else {
                 commentInfo.setRoot(replyCommentId);

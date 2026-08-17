@@ -143,23 +143,23 @@ onMounted(loadCategories)
 <style scoped>
 .side-nav {
   position: sticky;
-  top: 84px;
+  top: calc(var(--bil-header-h) + 16px);
   height: fit-content;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
   z-index: 10;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 14px;
-  border: 1px solid var(--bil-border);
-  border-radius: 999px;
-  background: var(--bil-surface);
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--bil-radius);
+  background: transparent;
   color: var(--bil-text);
   cursor: pointer;
   font-size: 14px;
@@ -168,13 +168,14 @@ onMounted(loadCategories)
 }
 
 .nav-item:hover {
-  background: var(--bil-border);
+  background: color-mix(in srgb, var(--bil-pink) 10%, transparent);
+  color: var(--bil-pink);
 }
 
 .nav-item.active {
-  color: #fff;
-  border-color: transparent;
-  background: var(--bil-gradient, linear-gradient(135deg, #00a1d6, #fb7299));
+  color: var(--bil-pink);
+  background: color-mix(in srgb, var(--bil-pink) 14%, transparent);
+  font-weight: 600;
 }
 
 .nav-icon {

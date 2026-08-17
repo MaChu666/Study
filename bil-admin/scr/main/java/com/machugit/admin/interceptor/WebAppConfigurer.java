@@ -21,7 +21,7 @@ public class WebAppConfigurer implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(appinterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/videos/**", "/images/**");
+                .excludePathPatterns("/videos/**", "/images/**", "/sysSetting/loadThemes");
     }
 
     @Override

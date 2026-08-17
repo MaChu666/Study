@@ -3,6 +3,7 @@
     <div
       class="video-player-wrapper"
       ref="wrapperRef"
+      @click="closeDanmuMenu"
       tabindex="0"
       @keydown="onKeydown"
       @dblclick="onDblClick"
@@ -26,12 +27,7 @@
         @leavepictureinpicture="isPip = false"
       />
 
-      <!-- Danmu canvas overlay -->
-      <canvas
-        ref="danmuCanvasRef"
-        v-show="danmuOn && danmuCanvasReady"
-        class="danmu-canvas"
-      />
+
 
       <!-- Loading overlay -->
       <div v-if="loading" class="video-overlay loading-overlay">
@@ -232,7 +228,7 @@
                 </div>
                 <div class="setting-row">
                   <span>字号</span>
-                  <select v-model="danmuFontSize" @change="emitDanmuSettings">
+                  <select v-model="danmuFontSize" @change="onDanmuStyleChange">
                     <option value="small">小</option>
                     <option value="normal">中</option>
                     <option value="large">大</option>
@@ -240,7 +236,7 @@
                 </div>
                 <div class="setting-row">
                   <span>显示区域</span>
-                  <select v-model="danmuArea" @change="emitDanmuSettings">
+                  <select v-model="danmuArea" @change="onDanmuStyleChange">
                     <option value="full">全屏</option>
                     <option value="top3">上 1/3</option>
                     <option value="mid3">中 1/3</option>
@@ -249,11 +245,58 @@
                 </div>
                 <div class="setting-row">
                   <span>弹幕速度</span>
-                  <select v-model="danmuSpeed" @change="emitDanmuSettings">
+                  <select v-model="danmuSpeed" @change="onDanmuStyleChange">
                     <option value="slow">慢</option>
                     <option value="normal">中</option>
                     <option value="fast">快</option>
                   </select>
+                </div>
+                <div class="setting-row">
+                  <span>禁止重叠</span>
+                  <button
+                    type="button"
+                    class="mini-toggle"
+                    :class="{ on: avoidOverlap }"
+                    @click="toggleAvoidOverlap"
+                  >{{ avoidOverlap ? '开' : '关' }}</button>
+                </div>
+                <div class="setting-row">
+                  <span>描边样式</span>
+                  <select v-model="strokeStyleId" @change="onStrokeStyleChange">
+                    <option value="none">无</option>
+                    <option value="stroke">描边</option>
+                    <option value="shadow">阴影</option>
+                    <option value="both">描边+阴影</option>
+                  </select>
+                </div>
+                <div class="setting-row">
+                  <span>屏蔽类型</span>
+                </div>
+                <div class="shield-types">
+                  <label v-for="item in barrageRenderList" :key="item.key" class="shield-type-item">
+                    <input type="checkbox" v-model="item.value" @change="emitDanmuSettings" />
+                    <span>{{ item.label }}</span>
+                  </label>
+                </div>
+                <div class="setting-row">
+                  <span>屏蔽词</span>
+                </div>
+                <div class="shield-words">
+                  <span v-for="(word, index) in shieldWords" :key="word" class="shield-word-tag">
+                    {{ word }}
+                    <button type="button" class="shield-word-del" @click="removeShieldWord(index)">×</button>
+                  </span>
+                  <span v-if="shieldWords.length === 0" class="shield-word-empty">暂无屏蔽词</span>
+                </div>
+                <div class="shield-word-add">
+                  <input
+                    v-model="shieldWordInput"
+                    type="text"
+                    placeholder="输入屏蔽词后回车"
+                    maxlength="20"
+                    @keydown.enter="addShieldWord"
+                  />
+                  <button type="button" @click="addShieldWord">添加</button>
                 </div>
                 <button
                   class="ctrl-btn danmu-toggle-btn"
@@ -307,6 +350,38 @@
 
     <!-- Danmu input (below player) -->
     <div class="danmu-input-row">
+      <div class="danmu-mode-group">
+        <button
+          v-for="m in danmuModes"
+          :key="m.value"
+          type="button"
+          class="mode-btn"
+          :class="{ active: danmuMode === m.value }"
+          @click="danmuMode = m.value"
+        >{{ m.label }}</button>
+      </div>
+
+      <button
+        type="button"
+        class="mode-btn jump-btn"
+        title="空降弹幕：输入 [空降]MM:SS 发送，点击弹幕跳转到对应时间"
+        @click="sendJumpDanmu"
+      >⏱ 空降</button>
+      <div class="danmu-color-picker" title="弹幕颜色">
+        <span
+          v-for="c in danmuColors"
+          :key="c"
+          class="color-dot"
+          :class="{ active: danmuColor === c }"
+          :style="{ background: c }"
+          @click="danmuColor = c"
+        />
+      </div>
+      <select v-model="danmuSendFontSize" class="danmu-font-select" title="弹幕字号">
+        <option value="small">小</option>
+        <option value="normal">中</option>
+        <option value="large">大</option>
+      </select>
       <input
         ref="danmuInputRef"
         v-model="danmuText"
@@ -318,6 +393,17 @@
       />
       <button class="danmu-send-btn" @click="sendDanmu">发送</button>
     </div>
+
+    <!-- Danmu context menu (click barrage to open) -->
+    <div
+      v-if="danmuMenu.visible"
+      class="danmu-context-menu"
+      :style="{ left: danmuMenu.x + 'px', top: danmuMenu.y + 'px' }"
+      @click.stop
+    >
+      <div class="danmu-menu-item" @click="copyDanmuText">复制弹幕</div>
+      <div class="danmu-menu-item" @click="reportDanmu">举报弹幕</div>
+    </div>
   </div>
 </template>
 
@@ -325,8 +411,12 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Hls from 'hls.js'
 import { loadDanmuApi, postDanmuApi } from '@/api/modules/danmu'
+import BarrageRenderer from '@/libs/fly-barrage/fly-barrage.js'
 import { reportVideoPlayOnlineApi } from '@/api/modules/video'
 import { eventBus } from '@/utils/eventBus'
+import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import { submitReportApi } from '@/api/modules/report'
 
 /* ============================
    Props
@@ -789,7 +879,7 @@ function wakeControls() {
    ============================ */
 function onPlay() {
   playing.value = true
-  startDanmuLoop()
+  barrageRenderer?.play()
   // Auto-focus danmu input when video starts playing
   nextTick(() => {
     danmuInputRef.value?.focus()
@@ -806,7 +896,7 @@ function onPlay() {
 
 function onPause() {
   playing.value = false
-  stopDanmuLoop()
+  barrageRenderer?.pause()
   showControls.value = true
   clearTimeout(hideTimer)
 }
@@ -815,7 +905,6 @@ function onTimeUpdate() {
   if (videoRef.value) {
     currentTime.value = videoRef.value.currentTime
     emit('timeUpdate', currentTime.value)
-    activateDanmuByTime(currentTime.value)
     // Throttle progress save every 10 seconds
     const now = Date.now()
     if (now - lastProgressSave >= PROGRESS_THROTTLE_MS) {
@@ -930,9 +1019,7 @@ function formatTime(s) {
 /* ==========================================================
    Danmu canvas rendering
    ========================================================== */
-const danmuCanvasRef = ref(null)
 const danmuInputRef = ref(null)
-const danmuCanvasReady = ref(false)
 const danmuText = ref('')
 
 // Settings (reactive, same as controls)
@@ -948,348 +1035,195 @@ const fontSizeMap = { small: 16, normal: 20, large: 26 }
 // Convert speed setting to pixels per second
 const speedMap = { slow: 60, normal: 110, fast: 170 }
 
-// Loaded danmu data from API
-const danmuPool = ref([])
-// Currently active (visible) danmu items
-const activeDanmu = ref([])
-let danmuIndex = 0
-let animationId = null
-let lastFrameTime = 0
-let resizeObserver = null
-let canvasWidth = 0
-let canvasHeight = 0
+// Send options
+const danmuModes = [
+  { label: '滚动', value: 'scroll' },
+  { label: '顶部', value: 'top' },
+  { label: '底部', value: 'bottom' }
+]
+const danmuMode = ref('scroll')
+const danmuSendFontSize = ref('normal')
+const danmuColor = ref('#FFFFFF')
+const danmuColors = [
+  '#FFFFFF', '#FE0302', '#FF7204', '#FFAA02', '#FFFF00', '#A0EE00', '#00CD00',
+  '#019899', '#4266BE', '#89D5FF', '#CC0273', '#9B9B9B', '#222222'
+]
 
-// Lane management
-const MAX_LANES = 14
-const laneStates = [] // { occupied: bool, finishX: number } per lane
+const userStore = useUserStore()
 
-function initLanes() {
-  for (let i = 0; i < MAX_LANES; i++) {
-    laneStates[i] = { occupied: false, finishX: 0 }
-  }
+// Danmu context menu state
+const danmuMenu = ref({ visible: false, x: 0, y: 0, barrage: null })
+
+// Render options
+const avoidOverlap = ref(true)
+const strokeStyleId = ref('both')
+const strokeStyleMap = {
+  none: { strokeStyle: 'rgba(0, 0, 0, 0)', lineWidth: 1, shadowColor: 'rgba(0, 0, 0, 0)', shadowBlur: 0, shadowOffsetX: 0, shadowOffsetY: 0 },
+  stroke: { strokeStyle: 'rgba(0, 0, 0, 0.6)', lineWidth: 3, shadowColor: 'rgba(0, 0, 0, 0)', shadowBlur: 0, shadowOffsetX: 0, shadowOffsetY: 0 },
+  shadow: { strokeStyle: 'rgba(0, 0, 0, 0)', lineWidth: 1, shadowColor: 'rgba(0, 0, 0, 0.8)', shadowBlur: 4, shadowOffsetX: 1, shadowOffsetY: 1 },
+  both: { strokeStyle: 'rgba(0, 0, 0, 0.35)', lineWidth: 3, shadowColor: 'rgba(0, 0, 0, 0.5)', shadowBlur: 2, shadowOffsetX: 1, shadowOffsetY: 1 }
 }
+const barrageRenderList = ref([
+  { key: 'scroll', label: '滚动', value: true },
+  { key: 'top', label: '顶部', value: true },
+  { key: 'bottom', label: '底部', value: true },
+  { key: 'color', label: '彩色', value: true }
+])
+const shieldWords = ref(JSON.parse(localStorage.getItem('bil_shield_words') || '[]'))
+const shieldWordInput = ref('')
+
+function addShieldWord() {
+  const word = shieldWordInput.value.trim()
+  if (word && !shieldWords.value.includes(word)) {
+    shieldWords.value.push(word)
+    localStorage.setItem('bil_shield_words', JSON.stringify(shieldWords.value))
+    emitDanmuSettings()
+  }
+  shieldWordInput.value = ''
+}
+
+function removeShieldWord(index) {
+  shieldWords.value.splice(index, 1)
+  localStorage.setItem('bil_shield_words', JSON.stringify(shieldWords.value))
+  emitDanmuSettings()
+}
+
+function toggleAvoidOverlap() {
+  avoidOverlap.value = !avoidOverlap.value
+  emitDanmuSettings()
+}
+
+function onStrokeStyleChange() {
+  emitDanmuSettings()
+}
+
+// Fly Barrage renderer instance (created on mount)
+let barrageRenderer = null
+let resizeObserver = null
+let resizeTimer = null
 
 function getFontSizePx() {
   return fontSizeMap[danmuFontSize.value] || 20
 }
 
 /**
- * Determine available lane range based on area setting.
- * Returns { start, end } lane indices (end exclusive).
+ * Convert a danmu record from the API into a fly-barrage option
  */
-function getLaneRange() {
-  const total = MAX_LANES
-  const area = danmuArea.value
-  if (area === 'top3') return { start: 0, end: Math.floor(total / 3) }
-  if (area === 'mid3') return { start: Math.floor(total / 3), end: Math.floor(2 * total / 3) }
-  if (area === 'bottom3') return { start: Math.floor(2 * total / 3), end: total }
-  return { start: 0, end: total } // full
+function mapDanmuToOptions(dm) {
+  const mode = Number(dm.mode) || 1
+  const barrageType = mode === 2 ? 'top' : mode === 3 ? 'bottom' : 'scroll'
+  const isJump = Number(dm.danmuType) === 1
+  // 空降目标时间（点击跳转用）；旧数据未存 jump_time 时回退用 time
+  const jumpTime = Number(dm.jumpTime) || (Number(dm.danmuType) === 1 ? (Number(dm.time) || 0) : 0)
+  // 弹幕出现时间：发送时刻的视频播放位置
+  const showTime = Number(dm.time) || 0
+  const option = {
+    id: String(dm.danmuId || ('dm-' + Date.now() + '-' + Math.random())),
+    barrageType,
+    time: showTime,
+    text: isJump ? '▶ ' + formatDanmuClock(jumpTime) : String(dm.text || ''),
+    fontSize: isJump ? 20 : (Number(dm.fontSize) || getFontSizePx()),
+    lineHeight: 1.2,
+    color: isJump ? '#00C2A8' : (dm.color || '#ffffff'),
+    prior: isJump ? true : (Number(dm.isPrior) === 1),
+    addition: { danmuType: isJump ? 1 : 0, jumpTime }
+  }
+  if (barrageType !== 'scroll') {
+    option.duration = 6000
+  } else {
+    option.duration = getScrollDanmuDuration()
+  }
+  return option
+}
+function initBarrageRenderer() {
+  if (barrageRenderer || !wrapperRef.value || !videoRef.value) return
+  barrageRenderer = new BarrageRenderer({
+    container: wrapperRef.value,
+    video: videoRef.value,
+    barrages: [],
+    renderConfig: getRenderConfig()
+  })
+  barrageRenderer.onBarrageClick = handleBarrageClick
 }
 
 /**
- * Find an available lane for a scroll-mode danmu.
- * A lane is available if no active scroll danmu currently occupies it
- * AND the previous danmu in that lane has scrolled past 60% of the canvas width.
+ * Build render config from current danmu settings
  */
-function findAvailableLane() {
-  const { start, end } = getLaneRange()
-  if (start >= end) return -1
-
-  // Reset lane occupancy
-  for (let i = 0; i < MAX_LANES; i++) {
-    laneStates[i].occupied = false
-  }
-
-  // Mark occupied lanes
-  for (const d of activeDanmu.value) {
-    if (d.mode === 1 && d.lane >= 0 && d.lane < MAX_LANES) {
-      // Lane is occupied only if the danmu still covers significant portion
-      if (d.x + d.textWidth > canvasWidth * 0.4) {
-        laneStates[d.lane].occupied = true
+function getRenderConfig() {
+  const stroke = strokeStyleMap[strokeStyleId.value] || strokeStyleMap.both
+  return {
+    heightReduce: 36,
+    speed: speedMap[danmuSpeed.value] || 110,
+    opacity: danmuOpacity.value / 100,
+    fontFamily: '"Microsoft YaHei", "PingFang SC", sans-serif',
+    fontWeight: 'bold',
+    renderRegion: danmuArea.value === 'top3' ? 0.33 : 1,
+    avoidOverlap: avoidOverlap.value,
+    minSpace: 10,
+    strokeStyle: stroke.strokeStyle,
+    lineWidth: stroke.lineWidth,
+    shadowColor: stroke.shadowColor,
+    shadowBlur: stroke.shadowBlur,
+    shadowOffsetX: stroke.shadowOffsetX,
+    shadowOffsetY: stroke.shadowOffsetY,
+    barrageFilter: (barrage) => {
+      const typeItem = barrageRenderList.value.find((item) => item.key === barrage.barrageType)
+      if (typeItem && !typeItem.value) return false
+      const colorItem = barrageRenderList.value.find((item) => item.key === 'color')
+      if (colorItem && !colorItem.value) {
+        const color = String(barrage.color || '').toUpperCase()
+        if (color && color !== '#FFFFFF' && color !== '#FFF' && color !== '#000000') return false
       }
+      if (shieldWords.value.some((word) => String(barrage.text || '').includes(word))) return false
+      return true
     }
   }
-
-  const available = []
-  for (let i = start; i < end; i++) {
-    if (!laneStates[i].occupied) {
-      available.push(i)
-    }
-  }
-
-  if (available.length === 0) {
-    // All lanes full, pick random from range
-    return start + Math.floor(Math.random() * (end - start))
-  }
-  return available[Math.floor(Math.random() * available.length)]
 }
 
 /**
- * Calculate Y position for a given lane index
+ * Danmu posted from the side panel — reload and re-render
  */
-function laneToY(lane) {
-  const fontSize = getFontSizePx()
-  const lineHeight = fontSize + 6 // spacing
-  const topOffset = 8
-  return topOffset + lane * lineHeight + fontSize * 0.8 // baseline offset
+function onDanmuPosted(videoId) {
+  if (String(videoId) === String(props.videoId)) {
+    loadDanmu()
+  }
 }
 
 /**
- * Estimate text width using canvas measure
- */
-function measureTextWidth(text, fontSize) {
-  const canvas = danmuCanvasRef.value
-  if (!canvas) return text.length * fontSize * 0.6 // fallback estimate
-  const ctx = canvas.getContext('2d')
-  ctx.font = `${fontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`
-  return ctx.measureText(text).width
-}
-
-/**
- * Load danmu from API
+ * Load danmu from API and hand them to the renderer
  */
 async function loadDanmu() {
-  if (!props.videoId) {
-    danmuPool.value = []
-    danmuIndex = 0
-    activeDanmu.value = []
-    return
-  }
+  if (!barrageRenderer || !props.videoId) return
   try {
     const data = await loadDanmuApi({
       videoId: props.videoId,
       fileId: props.fileId || ''
     })
-    if (Array.isArray(data)) {
-      // Sort by time
-      danmuPool.value = [...data].sort(
-        (a, b) => (Number(a.time) || 0) - (Number(b.time) || 0)
-      )
-    } else {
-      danmuPool.value = []
-    }
+    const barrages = Array.isArray(data)
+      ? data.map(mapDanmuToOptions).filter((b) => b.text)
+      : []
+    barrageRenderer.setBarrages(barrages)
+    barrageRenderer.renderFrame()
   } catch {
-    danmuPool.value = []
-  }
-  danmuIndex = 0
-  activeDanmu.value = []
-}
-
-/**
- * Activate danmu whose time has been reached
- */
-function activateDanmuByTime(time) {
-  if (!danmuOn.value || danmuPool.value.length === 0) return
-  const pool = danmuPool.value
-  const buffer = 0.3 // seconds buffer ahead
-
-  while (danmuIndex < pool.length) {
-    const dm = pool[danmuIndex]
-    const dmTime = Number(dm.time) || 0
-    if (dmTime <= time + buffer) {
-      spawnDanmu(dm)
-      danmuIndex++
-    } else {
-      break
-    }
+    barrageRenderer.setBarrages([])
   }
 }
 
 /**
- * Spawn a single danmu item onto the canvas
+ * Apply danmu style changes (font size / area / speed) to the renderer
  */
-function spawnDanmu(dm) {
-  const fontSize = getFontSizePx()
-  const text = String(dm.text || '')
-  if (!text) return
-
-  const textWidth = measureTextWidth(text, fontSize)
-  const mode = Number(dm.mode) || 1
-  let lane = -1
-  let y = 50
-  let x = canvasWidth
-
-  if (mode === 5) {
-    // Top mode: fixed at top portion
-    const { start, end } = getLaneRange()
-    const topEnd = start + Math.max(1, Math.floor((end - start) / 3))
-    lane = start + Math.floor(Math.random() * Math.max(1, topEnd - start))
-    y = laneToY(lane)
-    x = (canvasWidth - textWidth) / 2 // centered
-  } else if (mode === 4) {
-    // Bottom mode: fixed at bottom portion
-    const { start, end } = getLaneRange()
-    const botStart = end - Math.max(1, Math.floor((end - start) / 3))
-    lane = botStart + Math.floor(Math.random() * Math.max(1, end - botStart))
-    y = laneToY(lane)
-    x = (canvasWidth - textWidth) / 2 // centered
-  } else {
-    // Scroll mode (mode === 1)
-    lane = findAvailableLane()
-    if (lane < 0) return // no lane available, skip
-    y = laneToY(lane)
-    x = canvasWidth + 10 // start off-screen right
-  }
-
-  activeDanmu.value.push({
-    id: dm.danmuId || Date.now() + Math.random(),
-    text,
-    color: dm.color || '#ffffff',
-    mode,
-    fontSize,
-    textWidth,
-    lane,
-    x,
-    y,
-    createdAt: performance.now(),
-    // For top/bottom mode: display duration in seconds
-    displayDuration: mode === 5 || mode === 4 ? 4 : 0,
-    startX: x
-  })
+function onDanmuStyleChange() {
+  emitDanmuSettings()
+  loadDanmu()
 }
-
-/**
- * Update danmu positions
- */
-function updateDanmu(dt) {
-  const speedPx = speedMap[danmuSpeed.value] || 110
-  const now = performance.now()
-
-  for (let i = activeDanmu.value.length - 1; i >= 0; i--) {
-    const d = activeDanmu.value[i]
-    if (d.mode === 1) {
-      // Scroll mode: move left
-      d.x -= speedPx * dt
-      if (d.x + d.textWidth < -20) {
-        activeDanmu.value.splice(i, 1)
-      }
-    } else {
-      // Top/bottom fixed mode: remove after displayDuration
-      const elapsed = (now - d.createdAt) / 1000
-      if (elapsed >= d.displayDuration) {
-        activeDanmu.value.splice(i, 1)
-      }
-    }
-  }
-}
-
-/**
- * Draw all active danmu on canvas
- */
-function drawDanmu() {
-  const canvas = danmuCanvasRef.value
-  if (!canvas) return
-  const ctx = canvas.getContext('2d')
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-
-  const opacity = danmuOpacity.value / 100
-  let drew = false
-
-  for (const d of activeDanmu.value) {
-    if (d.mode === 5 || d.mode === 4) {
-      // Fixed modes: render with background shadow for readability
-      ctx.font = `${d.fontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`
-      ctx.textBaseline = 'alphabetic'
-
-      // Shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-      ctx.globalAlpha = opacity * 0.8
-      ctx.fillText(d.text, d.x + 1, d.y + 1)
-      ctx.fillText(d.text, d.x - 1, d.y - 1)
-      ctx.fillText(d.text, d.x + 1, d.y - 1)
-      ctx.fillText(d.text, d.x - 1, d.y + 1)
-
-      // Main text
-      ctx.fillStyle = d.color
-      ctx.globalAlpha = opacity
-      ctx.fillText(d.text, d.x, d.y)
-      drew = true
-    } else {
-      // Scroll mode
-      ctx.font = `${d.fontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`
-      ctx.textBaseline = 'alphabetic'
-
-      // Shadow for readability
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
-      ctx.globalAlpha = opacity * 0.7
-      ctx.fillText(d.text, d.x + 1, d.y + 1)
-
-      // Main text
-      ctx.fillStyle = d.color
-      ctx.globalAlpha = opacity
-      ctx.fillText(d.text, d.x, d.y)
-      drew = true
-    }
-  }
-
-  // Reset globalAlpha to avoid affecting other canvas operations
-  ctx.globalAlpha = 1
-
-  // If nothing drawn but danmu is on, don't show canvas (saves GPU)
-  if (!drew && activeDanmu.value.length === 0) {
-    danmuCanvasReady.value = danmuOn.value
-  }
-}
-
-/**
- * Animation loop
- */
-function startDanmuLoop() {
-  if (animationId) return
-  lastFrameTime = performance.now()
-  danmuCanvasReady.value = danmuOn.value
-
-  function loop(now) {
-    const dt = Math.min((now - lastFrameTime) / 1000, 0.1) // cap at 100ms to avoid huge jumps
-    lastFrameTime = now
-    updateDanmu(dt)
-    drawDanmu()
-    animationId = requestAnimationFrame(loop)
-  }
-  animationId = requestAnimationFrame(loop)
-}
-
-function stopDanmuLoop() {
-  if (animationId) {
-    cancelAnimationFrame(animationId)
-    animationId = null
-  }
-}
-
-/**
- * Resize canvas to match wrapper
- */
-function resizeCanvas() {
-  const wrapper = wrapperRef.value
-  const canvas = danmuCanvasRef.value
-  if (!wrapper || !canvas) return
-
-  const rect = wrapper.getBoundingClientRect()
-  const w = Math.floor(rect.width)
-  const h = Math.floor(rect.height)
-  if (w === 0 || h === 0) return
-
-  if (canvas.width !== w || canvas.height !== h) {
-    canvas.width = w
-    canvas.height = h
-    canvasWidth = w
-    canvasHeight = h
-    initLanes()
-  }
-}
-
-/**
- * Reset danmu state (on seek or video change)
- */
-function resetDanmu() {
-  activeDanmu.value = []
-  danmuIndex = 0
-}
-
 /* ============================
    Danmu settings emit
    ============================ */
 function emitDanmuSettings() {
+  if (barrageRenderer) {
+    barrageRenderer.setRenderConfig(getRenderConfig())
+    barrageRenderer.renderFrame()
+  }
   emit('danmuSettings', {
     on: danmuOn.value,
     opacity: danmuOpacity.value / 100,
@@ -1301,58 +1235,42 @@ function emitDanmuSettings() {
 
 function toggleDanmu() {
   danmuOn.value = !danmuOn.value
-  if (!danmuOn.value) {
-    stopDanmuLoop()
-    activeDanmu.value = []
-    danmuCanvasReady.value = false
-    clearCanvas()
-  } else {
-    danmuCanvasReady.value = true
-    if (playing.value) {
-      startDanmuLoop()
-    }
-  }
+  barrageRenderer?.switch(danmuOn.value)
   emitDanmuSettings()
-}
-
-function clearCanvas() {
-  const canvas = danmuCanvasRef.value
-  if (!canvas) return
-  const ctx = canvas.getContext('2d')
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight)
 }
 
 /* ============================
    Send danmu
    ============================ */
 async function sendDanmu() {
-  const text = danmuText.value.trim()
-  if (!text) return
+  const raw = danmuText.value.trim()
+  if (!raw) return
 
-  const dm = {
-    text,
-    color: '#ffffff',
-    mode: 1,
-    time: Math.floor(currentTime.value * 1000)
+  const timeMs = Math.floor(currentTime.value * 1000)
+  const isJump = isValidJumpDanmu(raw)
+  const jumpTime = isJump ? parseJumpTime(raw) : 0
+  const modeNum = isJump ? 1 : (danmuMode.value === 'top' ? 2 : danmuMode.value === 'bottom' ? 3 : 1)
+
+  const option = {
+    id: 'local-' + Date.now() + '-' + Math.random(),
+    barrageType: isJump ? 'scroll' : danmuMode.value,
+    time: timeMs,
+    text: isJump ? '▶ ' + formatDanmuClock(jumpTime) : raw,
+    fontSize: isJump ? 20 : (fontSizeMap[danmuSendFontSize.value] || 20),
+    lineHeight: 1.2,
+    color: isJump ? '#00C2A8' : danmuColor.value,
+    prior: true,
+    addition: { danmuType: isJump ? 1 : 0, jumpTime: isJump ? jumpTime : 0 }
+  }
+  if (danmuMode.value !== 'scroll') {
+    option.duration = 6000
+  } else {
+    option.duration = getScrollDanmuDuration()
   }
 
-  // Optimistic: show immediately
-  if (danmuOn.value && canvasWidth > 0 && canvasHeight > 0) {
-    const fontSize = getFontSizePx()
-    dm.textWidth = measureTextWidth(text, fontSize)
-    dm.fontSize = fontSize
-    dm.lane = findAvailableLane()
-    dm.y = laneToY(dm.lane >= 0 ? dm.lane : 5)
-    dm.x = canvasWidth + 10
-    dm.createdAt = performance.now()
-    dm.displayDuration = 0
-    dm.id = 'local-' + Date.now()
-    dm.startX = dm.x
-    activeDanmu.value.push(dm)
-    danmuCanvasReady.value = true
-    if (playing.value && !animationId) {
-      startDanmuLoop()
-    }
+  // Optimistic: show immediately through the renderer
+  if (danmuOn.value) {
+    barrageRenderer?.send(option)
   }
 
   danmuText.value = ''
@@ -1363,16 +1281,115 @@ async function sendDanmu() {
       await postDanmuApi({
         videoId: props.videoId,
         fileId: props.fileId || '',
-        text: text,
-        mode: 1,
-        color: '#ffffff',
-        time: Math.floor(currentTime.value * 1000)
+        text: raw,
+        mode: modeNum,
+        color: isJump ? '#00C2A8' : danmuColor.value,
+        fontSize: isJump ? 20 : (fontSizeMap[danmuSendFontSize.value] || 20),
+        isPrior: 1,
+        time: timeMs,
+        danmuType: isJump ? 1 : 0,
+        jumpTime: isJump ? jumpTime : 0
       })
       eventBus.emit('danmu:posted', props.videoId)
     } catch {
       // Danmu posted optimistically already
     }
   }
+}
+
+function formatDanmuClock(ms) {
+  const totalSeconds = Math.max(0, Math.floor((ms || 0) / 1000))
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
+}
+
+function parseJumpTime(text) {
+  const match = String(text || '').match(/\[空降\](\d{1,2}):(\d{2})/)
+  if (!match) return 0
+  const minutes = parseInt(match[1], 10)
+  const seconds = parseInt(match[2], 10)
+  return (minutes * 60 + seconds) * 1000
+}
+
+function isValidJumpDanmu(text) {
+  // 仅纯 [空降]MM:SS / [空降]M:SS 格式才判定为空降弹幕
+  const match = /^\[空降\](\d{1,2}):(\d{2})$/.exec(String(text || '').trim())
+  if (!match) return false
+  const minutes = parseInt(match[1], 10)
+  const seconds = parseInt(match[2], 10)
+  // 秒必须是合法时间（00-59）
+  if (seconds > 59) return false
+  // 时间刻度必须在视频时长范围内
+  const totalSeconds = minutes * 60 + seconds
+  if (duration.value > 0 && totalSeconds > duration.value) return false
+  return true
+}
+
+function getScrollDanmuDuration() {
+  return { slow: 12000, normal: 8000, fast: 6000 }[danmuSpeed.value] || 8000
+}
+
+function sendJumpDanmu() {
+  const current = danmuText.value.trim()
+  danmuText.value = current.startsWith('[空降]') ? current : ('[空降]' + current)
+  danmuInputRef.value?.focus()
+}
+
+function handleBarrageClick(barrage) {
+  if (!barrage) return
+  // 空降弹幕：点击直接跳转到对应时间
+  if (barrage.addition?.danmuType === 1) {
+    const jumpTime = Number(barrage.addition?.jumpTime) || Number(barrage.time) || 0
+    if (jumpTime > 0 && videoRef.value) {
+      videoRef.value.currentTime = jumpTime / 1000
+    }
+    return
+  }
+  // 普通弹幕：弹出复制 / 举报菜单
+  const wrapperRect = wrapperRef.value?.getBoundingClientRect()
+  const menuWidth = 120
+  const menuHeight = 92
+  let x = (wrapperRect?.left || 0) + barrage.left
+  let y = (wrapperRect?.top || 0) + barrage.top
+  x = Math.max(8, Math.min(x, window.innerWidth - menuWidth - 8))
+  y = Math.max(8, Math.min(y, window.innerHeight - menuHeight - 8))
+  danmuMenu.value = { visible: true, x, y, barrage }
+}
+
+function copyDanmuText() {
+  const barrage = danmuMenu.value.barrage
+  if (barrage?.text) {
+    navigator.clipboard?.writeText(barrage.text)
+    ElMessage.success('弹幕已复制')
+  }
+  closeDanmuMenu()
+}
+
+async function reportDanmu() {
+  const barrage = danmuMenu.value.barrage
+  closeDanmuMenu()
+  if (!barrage) return
+  if (!userStore.isLogin) {
+    userStore.openLoginDialog()
+    return
+  }
+  try {
+    await submitReportApi({
+      targetType: 3,
+      targetId: String(barrage.id || ''),
+      reasonType: 1,
+      reasonDesc: '弹幕违规举报'
+    })
+    ElMessage.success('举报成功，感谢你的反馈')
+  } catch {
+    ElMessage.error('举报失败，请稍后再试')
+  }
+}
+
+function closeDanmuMenu() {
+  danmuMenu.value.visible = false
+  danmuMenu.value.barrage = null
 }
 
 /* ============================
@@ -1428,15 +1445,11 @@ watch(() => props.src, () => {
   hasReportedPlay = false
   lastProgressSave = 0
   clearCountdown()
-  stopDanmuLoop()
-  resetDanmu()
-  activeDanmu.value = []
-  clearCanvas()
+  barrageRenderer?.setBarrages([])
   initHls()
 })
 
 watch(() => [props.videoId, props.fileId], () => {
-  resetDanmu()
   loadDanmu()
   checkWatchLater()
   showResumePrompt.value = false
@@ -1444,25 +1457,6 @@ watch(() => [props.videoId, props.fileId], () => {
   lastProgressSave = 0
 }, { immediate: false })
 
-// Track seeking to reset danmu
-let lastCheckedTime = 0
-watch(currentTime, (newTime, oldTime) => {
-  // Detect seek (jump > 1 second that isn't normal playback)
-  const diff = Math.abs(newTime - oldTime)
-  if (diff > 1.5 && oldTime > 0) {
-    resetDanmu()
-    // Recalculate danmuIndex based on new time
-    const pool = danmuPool.value
-    let idx = 0
-    while (idx < pool.length && (Number(pool[idx].time) || 0) < newTime) {
-      idx++
-    }
-    danmuIndex = idx
-    // Immediately activate danmu near current time
-    activateDanmuByTime(newTime)
-    lastCheckedTime = newTime
-  }
-})
 
 /* ============================
    Lifecycle
@@ -1490,25 +1484,31 @@ onMounted(() => {
     wrapperRef.value?.focus()
   }
 
-  // Observe wrapper size for canvas
+  // Create the fly-barrage renderer over the player wrapper
+  initBarrageRenderer()
+
+  // Observe wrapper size to keep the danmu canvas in sync
   if (wrapperRef.value) {
     resizeObserver = new ResizeObserver(() => {
-      resizeCanvas()
+      if (resizeTimer) clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => barrageRenderer?.resize(), 100)
     })
     resizeObserver.observe(wrapperRef.value)
-    resizeCanvas()
   }
+
+  // Listen for danmu posted from the side panel
+  eventBus.on('danmu:posted', onDanmuPosted)
 
   // Load danmu and check watch later
   loadDanmu()
   checkWatchLater()
-  initLanes()
 })
 
 onBeforeUnmount(() => {
   clearTimeout(hideTimer)
+  if (resizeTimer) clearTimeout(resizeTimer)
   clearCountdown()
-  stopDanmuLoop()
+  eventBus.off('danmu:posted', onDanmuPosted)
   destroyHls()
 
   // Clear all dropdown timers
@@ -1544,6 +1544,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   outline: none;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 video {
@@ -1553,16 +1554,7 @@ video {
   display: block;
 }
 
-/* Danmu canvas */
-.danmu-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 3;
-}
+
 
 /* ============================
    Overlays
@@ -2041,6 +2033,120 @@ video {
   font-size: 12px;
 }
 
+.mini-toggle {
+  height: 24px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: #aaa;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mini-toggle.on {
+  color: #fff;
+  background: var(--bil-primary, #00a1d6);
+  border-color: var(--bil-primary, #00a1d6);
+}
+
+.shield-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0 4px;
+}
+
+.shield-type-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.shield-type-item input {
+  accent-color: var(--bil-primary, #00a1d6);
+}
+
+.shield-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0 4px;
+}
+
+.shield-word-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 8px;
+  font-size: 12px;
+  color: #eee;
+  background: #333;
+  border-radius: 4px;
+}
+
+.shield-word-del {
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.shield-word-del:hover {
+  color: var(--bil-pink);
+}
+
+.shield-word-empty {
+  font-size: 12px;
+  color: #777;
+}
+
+.shield-word-add {
+  display: flex;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.shield-word-add input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  color: #eee;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  border-radius: 4px;
+  outline: none;
+}
+
+.shield-word-add input:focus {
+  border-color: var(--bil-primary, #00a1d6);
+}
+
+.shield-word-add button {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #fff;
+  background: var(--bil-primary, #00a1d6);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.shield-word-add button:hover {
+  opacity: 0.85;
+}
+
 .danmu-toggle-btn {
   margin-top: 8px;
   width: 100%;
@@ -2067,9 +2173,84 @@ video {
 .danmu-input-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 0 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
+}
+
+.danmu-mode-group {
+  display: flex;
+  gap: 4px;
+}
+
+.mode-btn {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #666;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn:hover {
+  color: var(--bil-primary, #00a1d6);
+}
+
+.mode-btn.active {
+  color: #fff;
+  background: var(--bil-primary, #00a1d6);
+  border-color: var(--bil-primary, #00a1d6);
+}
+
+.danmu-color-picker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  padding: 0 8px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  transition: transform 0.15s;
+}
+
+.color-dot:hover {
+  transform: scale(1.2);
+}
+
+.color-dot.active {
+  outline: 2px solid var(--bil-primary, #00a1d6);
+  outline-offset: 1px;
+}
+
+.danmu-font-select {
+  height: 36px;
+  padding: 0 6px;
+  font-size: 13px;
+  color: #333;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
 }
 
 .danmu-input {
@@ -2079,7 +2260,7 @@ video {
   padding: 0 12px;
   font-size: 13px;
   color: #333;
-  background: #f5f5f7;
+  background: #ffffff;
   border: 1px solid #ddd;
   border-radius: 6px;
   outline: none;
@@ -2114,5 +2295,41 @@ video {
 
 .danmu-send-btn:active {
   opacity: 0.7;
+}
+
+.jump-btn {
+  color: var(--bil-primary, #00a1d6);
+  border-color: var(--bil-primary, #00a1d6);
+  background: #f0faff;
+}
+
+.jump-btn:hover {
+  color: #fff;
+  background: var(--bil-primary, #00a1d6);
+}
+
+.danmu-context-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 120px;
+  padding: 4px;
+  background: #ffffff;
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.danmu-menu-item {
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.danmu-menu-item:hover {
+  background: #f5f6f7;
+  color: var(--bil-primary, #00a1d6);
 }
 </style>

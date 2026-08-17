@@ -1,18 +1,43 @@
-* {
+﻿* {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
+  padding: 0;
+}
+
+body {
   min-width: 320px;
   background: var(--bil-bg);
   color: var(--bil-text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--bil-font);
   font-size: 14px;
+  line-height: 1.5;
   transition: background-color 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bil-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }

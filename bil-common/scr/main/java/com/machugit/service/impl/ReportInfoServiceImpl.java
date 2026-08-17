@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import com.machugit.entity.po.ReportInfo;
 import com.machugit.entity.query.ReportInfoQuery;
 import com.machugit.mappers.ReportInfoMapper;
+import com.machugit.mappers.DanmuInfoMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.machugit.service.ReportInfoService;
 
 /**
@@ -21,11 +24,24 @@ public class ReportInfoServiceImpl implements ReportInfoService {
     @Resource
     private ReportInfoMapper<ReportInfo, ReportInfoQuery> reportInfoMapper;
 
+    @Resource
+    private DanmuInfoMapper<com.machugit.entity.po.DanmuInfo, com.machugit.entity.query.DanmuInfoQuery> danmuInfoMapper;
+
+    private static final Logger logger = LoggerFactory.getLogger(ReportInfoServiceImpl.class);
+
     /**
      * 提交举报
      */
     @Override
     public void submitReport(ReportInfo report) {
+        // 举报目标是弹幕时，弹幕标记次数加一
+        if (report.getTargetType() != null && report.getTargetType() == 3 && report.getTargetId() != null) {
+            try {
+                danmuInfoMapper.incrementReportCountByDanmuId(Integer.valueOf(report.getTargetId()));
+            } catch (Exception e) {
+                logger.error("弹幕举报标记失败, targetId:{}", report.getTargetId(), e);
+            }
+        }
         report.setCreateTime(new Date());
         report.setUpdateTime(new Date());
         this.reportInfoMapper.insert(report);

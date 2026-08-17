@@ -19,8 +19,13 @@
 		<result column="mode" property="mode"  />
 		<!--弹幕颜色-->
 		<result column="color" property="color"  />
+		<result column="font_size" property="fontSize"  />
+		<result column="is_prior" property="isPrior"  />
+		<result column="danmu_type" property="danmuType"  />
+		<result column="report_count" property="reportCount"  />
 		<!--弹幕时间-->
 		<result column="time" property="time"  />
+		<result column="jump_time" property="jumpTime"  />
 		<!--发布时间-->
 		<result column="post_time" property="postTime"  />
 	</resultMap>
@@ -29,7 +34,7 @@
 	<!-- 通用查询结果列-->
 	<sql id="base_column_list">
 		 d.danmu_id,d.video_id,d.file_id,d.user_id,d.text,
-		 d.mode,d.color,d.time,d.post_time
+		 d.mode,d.color,d.font_size,d.is_prior,d.danmu_type,d.report_count,d.time,d.jump_time,d.post_time
 	</sql>
 
 	<sql id="base_condition_filed">
@@ -119,8 +124,23 @@
 			<if test="bean.color != null">
 				 color,
 			</if>
+			<if test="bean.fontSize != null">
+				 font_size,
+			</if>
+			<if test="bean.isPrior != null">
+				 is_prior,
+			</if>
+			<if test="bean.danmuType != null">
+				 danmu_type,
+			</if>
+			<if test="bean.reportCount != null">
+				 report_count,
+			</if>
 			<if test="bean.time != null">
 				 time,
+			</if>
+			<if test="bean.jumpTime != null">
+				 jump_time,
 			</if>
 			<if test="bean.postTime != null">
 				 post_time,
@@ -148,8 +168,23 @@
 			<if test="bean.color!=null">
 				 #{bean.color},
 			</if>
+			<if test="bean.fontSize!=null">
+				 #{bean.fontSize},
+			</if>
+			<if test="bean.isPrior!=null">
+				 #{bean.isPrior},
+			</if>
+			<if test="bean.danmuType!=null">
+				 #{bean.danmuType},
+			</if>
+			<if test="bean.reportCount!=null">
+				 #{bean.reportCount},
+			</if>
 			<if test="bean.time!=null">
 				 #{bean.time},
+			</if>
+			<if test="bean.jumpTime!=null">
+				 #{bean.jumpTime},
 			</if>
 			<if test="bean.postTime!=null">
 				 #{bean.postTime},
@@ -182,8 +217,23 @@
 			<if test="bean.color != null">
 				 color,
 			</if>
+			<if test="bean.fontSize != null">
+				 font_size,
+			</if>
+			<if test="bean.isPrior != null">
+				 is_prior,
+			</if>
+			<if test="bean.danmuType != null">
+				 danmu_type,
+			</if>
+			<if test="bean.reportCount != null">
+				 report_count,
+			</if>
 			<if test="bean.time != null">
 				 time,
+			</if>
+			<if test="bean.jumpTime != null">
+				 jump_time,
 			</if>
 			<if test="bean.postTime != null">
 				 post_time,
@@ -211,8 +261,23 @@
 			<if test="bean.color!=null">
 				 #{bean.color},
 			</if>
+			<if test="bean.fontSize!=null">
+				 #{bean.fontSize},
+			</if>
+			<if test="bean.isPrior!=null">
+				 #{bean.isPrior},
+			</if>
+			<if test="bean.danmuType!=null">
+				 #{bean.danmuType},
+			</if>
+			<if test="bean.reportCount!=null">
+				 #{bean.reportCount},
+			</if>
 			<if test="bean.time!=null">
 				 #{bean.time},
+			</if>
+			<if test="bean.jumpTime!=null">
+				 #{bean.jumpTime},
 			</if>
 			<if test="bean.postTime!=null">
 				 #{bean.postTime},
@@ -241,8 +306,23 @@
 			<if test="bean.color!=null">
 				 color = VALUES(color),
 			</if>
+			<if test="bean.fontSize!=null">
+				 font_size = VALUES(font_size),
+			</if>
+			<if test="bean.isPrior!=null">
+				 is_prior = VALUES(is_prior),
+			</if>
+			<if test="bean.danmuType!=null">
+				 danmu_type = VALUES(danmu_type),
+			</if>
+			<if test="bean.reportCount!=null">
+				 report_count = VALUES(report_count),
+			</if>
 			<if test="bean.time!=null">
 				 time = VALUES(time),
+			</if>
+			<if test="bean.jumpTime!=null">
+				 jump_time = VALUES(jump_time),
 			</if>
 			<if test="bean.postTime!=null">
 				 post_time = VALUES(post_time),
@@ -260,7 +340,12 @@
 			 text,
 			 mode,
 			 color,
+			 font_size,
+			 is_prior,
+			 danmu_type,
+			 report_count,
 			 time,
+			 jump_time,
 			 post_time
 		 )values
 		 <foreach collection="list" item="item" separator=",">
@@ -272,7 +357,12 @@
 				 #{item.text},
 				 #{item.mode},
 				 #{item.color},
+				 #{item.fontSize},
+				 #{item.isPrior},
+				 #{item.danmuType},
+				 #{item.reportCount},
 				 #{item.time},
+				 #{item.jumpTime},
 				 #{item.postTime}
 			 )
 		 </foreach>
@@ -288,7 +378,12 @@
 			 text,
 			 mode,
 			 color,
+			 font_size,
+			 is_prior,
+			 danmu_type,
+			 report_count,
 			 time,
+			 jump_time,
 			 post_time
 		 )values
 		 <foreach collection="list" item="item" separator=",">
@@ -300,7 +395,12 @@
 				 #{item.text},
 				 #{item.mode},
 				 #{item.color},
+				 #{item.fontSize},
+				 #{item.isPrior},
+				 #{item.danmuType},
+				 #{item.reportCount},
 				 #{item.time},
+				 #{item.jumpTime},
 				 #{item.postTime}
 			 )
 		 </foreach>
@@ -312,7 +412,12 @@
 			text = VALUES(text),
 			mode = VALUES(mode),
 			color = VALUES(color),
+			font_size = VALUES(font_size),
+			is_prior = VALUES(is_prior),
+			danmu_type = VALUES(danmu_type),
+			report_count = VALUES(report_count),
 			time = VALUES(time),
+			jump_time = VALUES(jump_time),
 			post_time = VALUES(post_time)
 	</insert>
 
@@ -341,8 +446,23 @@
 			<if test="bean.color != null">
 				 color = #{bean.color},
 			</if>
+			<if test="bean.fontSize != null">
+				 font_size = #{bean.fontSize},
+			</if>
+			<if test="bean.isPrior != null">
+				 is_prior = #{bean.isPrior},
+			</if>
+			<if test="bean.danmuType != null">
+				 danmu_type = #{bean.danmuType},
+			</if>
+			<if test="bean.reportCount != null">
+				 report_count = #{bean.reportCount},
+			</if>
 			<if test="bean.time != null">
 				 time = #{bean.time},
+			</if>
+			<if test="bean.jumpTime != null">
+				 jump_time = #{bean.jumpTime},
 			</if>
 			<if test="bean.postTime != null">
 				 post_time = #{bean.postTime},
@@ -379,14 +499,34 @@
 			<if test="bean.color != null">
 				 color = #{bean.color},
 			</if>
+			<if test="bean.fontSize != null">
+				 font_size = #{bean.fontSize},
+			</if>
+			<if test="bean.isPrior != null">
+				 is_prior = #{bean.isPrior},
+			</if>
+			<if test="bean.danmuType != null">
+				 danmu_type = #{bean.danmuType},
+			</if>
+			<if test="bean.reportCount != null">
+				 report_count = #{bean.reportCount},
+			</if>
 			<if test="bean.time != null">
 				 time = #{bean.time},
+			</if>
+			<if test="bean.jumpTime != null">
+				 jump_time = #{bean.jumpTime},
 			</if>
 			<if test="bean.postTime != null">
 				 post_time = #{bean.postTime},
 			</if>
  		 </set>
  		 where danmu_id=#{danmuId}
+	</update>
+
+	<!-- 根据DanmuId举报次数加一-->
+	<update id="incrementReportCountByDanmuId">
+		update danmu_info set report_count = ifnull(report_count, 0) + 1 where danmu_id=#{danmuId}
 	</update>
 
 	<!-- 根据DanmuId删除-->

@@ -43,6 +43,18 @@
 | JVM 内存参数 | `-Xmx` 和 `-Xms` 不超过物理内存 70%；RocketMQ Broker 默认 8G/512G 必须强制调低至 2G 以下（建议 `-Xmx2g -Xms2g`）；若机器内存小，进一步降至 1G，并指导调整系统页面文件 |
 | 启动方式 | 对于 RocketMQ、Seata Server 等，优先建议使用官方 `bin/` 目录下的 `.sh`/`.cmd` 启动脚本，而非直接 `java -jar`；若必须 `java -jar`，需附带 `-Dloader.path` 指向 `lib` 目录 |
 
+### 1.1 鉴权与拦截器白名单（事故案例：用户被静默登出）
+
+> **事故**：用户登录后进入个人主页，前端调用 `/sysSetting/loadThemes` 读取空间主题。该接口路由到 admin 服务，网关虽已放行 `/sysSetting/`，但 **admin 服务拦截器仍按管理员 token 校验**，用户 token 被拒 → 返回 901 → 前端 `clearToken()` → 用户被强制登出、刷新即掉线。
+
+1. **双重白名单**：每个请求要过两道鉴权——网关 `AuthGlobalFilter.PUBLIC_PATHS` → 目标服务拦截器（`WebAppConfigurer.excludePathPatterns` / `AppInterceptor.PUBLIC_PATHS`）。新增/修改接口时两处必须同步核对，只放行其中一处算漏配。
+2. **用户端接口落到 admin 服务必须显式排除**：用户端（`TOKEN_WEB`）要调用的接口若位于 admin 服务（如 `/sysSetting/loadThemes`），必须在 admin `WebAppConfigurer.excludePathPatterns` 中登记，否则会被 admin 拦截器按管理员（`TOKEN_ADMIN`）校验而返回 901。
+3. **拦截器路径不含 context-path**：`excludePathPatterns` / `addPathPatterns` 匹配的是去掉 context-path 后的 servlet 路径。例如 context-path 为 `/admin` 时，代码中写 `/sysSetting/loadThemes`，**禁止**写 `/admin/sysSetting/loadThemes`（本次实际踩坑：第一版写错，改回无前缀才生效）。
+4. **901 症状排查链路**：前端收到 code 901/401 会执行 `clearToken()` 并跳登录页。出现“登录成功 → 进主页 → 提示未登录 / 刷新即掉线”时，按链路排查：网关放行了吗 → 服务拦截器放行了吗 → 该接口是否被 admin 拦截器当成管理员接口。
+5. **改完白名单必须全量回归**：用 curl 把前端调用的公开接口逐一验证（不带 token 应 200；带用户 token 应 200；需登录的接口带 token 应通过），确认无新增 901/401。
+6. **接口归属三问**：新增接口先回答——① 属于哪个服务？② 谁调用（用户端/管理端/游客）？③ 需要哪种 token（`TOKEN_WEB` / `TOKEN_ADMIN` / 无需）？回答清楚再动手。
+7. 各服务拦截器 `PUBLIC_PATHS` 只登记本服务“游客可访问”的接口；需要登录的接口不登记（默认行为即校验 token）。
+
 
 ## 二、前端
 
@@ -92,6 +104,9 @@
 14. 图形化工具中用 `SOURCE` 执行 SQL 脚本
 15. JVM 内存参数超出物理内存 70%
 16. Node.js 版本低于 15 却使用 ES2021+ 语法
+17. 新增/修改接口后不同步核对网关与目标服务拦截器的双重白名单
+18. `excludePathPatterns` / `addPathPatterns` 写入 context-path 前缀（如写成 `/admin/xxx`）
+19. 用户端要调用的接口被 admin 拦截器按管理员校验，导致 901 静默登出
 
 
 ## 六、检查清单
@@ -112,3 +127,7 @@
 - [ ] JVM 内存参数合理？
 - [ ] SQL 脚本执行方式正确？
 - [ ] Node.js 版本 ≥ 15？
+- [ ] 新增/修改接口后，网关 `PUBLIC_PATHS` 与目标服务拦截器白名单都核对了？
+- [ ] 拦截器路径没写 context-path 前缀？
+- [ ] 用户端要调的接口未被 admin 拦截器误拦截？
+- [ ] 改完鉴权白名单后，全量回归公开接口无新增 901/401？

@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <article class="video-card" @click="$emit('play', video)">
     <div class="cover-wrap">
-      <img class="cover" :src="video.videoCover" :alt="video.videoName" />
+      <img class="cover" :src="video.videoCover" :alt="video.videoName" loading="lazy" />
       <span class="duration">{{ formatDuration(video.duration) }}</span>
       <span class="play-count-badge" v-if="video.playCount">
         <svg class="play-icon" viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
@@ -9,19 +9,22 @@
         </svg>
         {{ formatCount(video.playCount) }}
       </span>
+      <span class="hover-mask">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </span>
     </div>
     <h3 class="title">{{ video.videoName }}</h3>
-    <UserBadge
-    class="author"
-    :user-id="video.userId"
-    :user-name="video.userName || video.useName"
-    :avatar="video.userAvatar"
-    size="sm"
-  />
+    <div class="author-row">
+      <img v-if="video.userAvatar" class="author-avatar" :src="video.userAvatar" alt="" loading="lazy" />
+      <span v-else class="author-avatar author-avatar-text">{{ (video.userName || video.useName || 'U').slice(0, 1) }}</span>
+      <span class="author-name">{{ video.userName || video.useName || '未知UP主' }}</span>
+    </div>
     <footer class="meta">
-      <span>{{ formatCount(video.playCount) }} 播放</span>
+      <span>{{ formatCount(video.playCount) }}播放</span>
       <span class="meta-divider">·</span>
-      <span>{{ formatCount(video.danmuCount) }} 弹幕</span>
+      <span>{{ formatCount(video.danmuCount) }}弹幕</span>
       <span class="meta-divider">·</span>
       <span>{{ timeAgo(video.createTime || video.postTime) }}</span>
     </footer>
@@ -29,8 +32,6 @@
 </template>
 
 <script setup>
-import UserBadge from '@/components/user/UserBadge.vue'
-
 defineProps({
   video: {
     type: Object,
@@ -85,96 +86,128 @@ function timeAgo(dateStr) {
 <style scoped>
 .video-card {
   min-width: 0;
-  border-radius: 12px;
+  border-radius: var(--bil-radius-lg);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition: transform 0.2s ease;
 }
-
 .video-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--bil-shadow);
+  transform: translateY(-2px);
 }
-
 .video-card:hover .cover {
-  transform: scale(1.03);
+  transform: scale(1.06);
+}
+.video-card:hover .hover-mask {
+  opacity: 1;
 }
 
 .cover-wrap {
   position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--bil-radius-lg);
   background: var(--bil-border);
 }
-
 .cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
-
 .duration {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.68);
+  right: 8px;
+  bottom: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
   font-size: 12px;
-  line-height: 1.2;
+  line-height: 18px;
 }
-
 .play-count-badge {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
+  left: 8px;
+  bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
+  gap: 3px;
   color: #fff;
   font-size: 12px;
-  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  line-height: 18px;
 }
-
 .play-icon {
   flex-shrink: 0;
 }
+.hover-mask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
 
 .title {
-  margin: 10px 0 4px;
-  font-size: 15px;
-  line-height: 1.45;
+  margin: 10px 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+  transition: color 0.2s;
 }
+.video-card:hover .title { color: var(--bil-pink); }
 
-.author,
-.meta {
-  margin: 0;
-  color: var(--bil-muted);
-  font-size: 13px;
-  line-height: 1.4;
+.author-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: auto;
 }
+.author-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bil-pink);
+}
+.author-avatar-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+.author-name {
+  font-size: 13px;
+  color: var(--bil-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s;
+}
+.video-card:hover .author-name { color: var(--bil-pink); }
 
 .meta {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 4px;
+  color: var(--bil-muted);
+  font-size: 12px;
+  line-height: 1.4;
 }
-
-.meta-divider {
-  margin: 0 2px;
-}
+.meta-divider { margin: 0 2px; }
 </style>

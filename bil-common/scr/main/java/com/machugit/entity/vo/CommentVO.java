@@ -7,8 +7,11 @@ import com.machugit.entity.po.CommentInfo;
 public class CommentVO extends CommentInfo {
     private String videoName;
     private String userName;
+    private String avatar;
     public String getVideoName() { return videoName; }
     public void setVideoName(String videoName) { this.videoName = videoName; }
     public String getUserName() { return userName; }
     public void setUserName(String userName) { this.userName = userName; }
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
 }

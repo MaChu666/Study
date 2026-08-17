@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="interaction-bar">
     <!-- Like -->
     <button
@@ -217,7 +217,8 @@ function share() {
 
 .ia-btn:hover:not(:disabled) {
   background: var(--bil-hover);
-  border-color: var(--bil-primary);
+  border-color: var(--bil-pink);
+  color: var(--bil-pink);
 }
 
 .ia-btn:disabled,
@@ -228,8 +229,8 @@ function share() {
 
 /* Active / filled states */
 .ia-btn.active {
-  color: var(--bil-primary);
-  border-color: var(--bil-primary);
+  color: var(--bil-pink);
+  border-color: var(--bil-pink);
   background: var(--bil-surface);
 }
 
@@ -279,7 +280,7 @@ function share() {
 
 .coin-option-btn:hover:not(:disabled) {
   background: var(--bil-hover);
-  border-color: var(--bil-primary);
+  border-color: var(--bil-pink);
 }
 
 .coin-option-btn:disabled {
@@ -287,3 +288,4 @@ function share() {
   cursor: not-allowed;
 }
 </style>
+

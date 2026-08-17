@@ -51,10 +51,10 @@ public class VideoController extends com.machugit.controller.ABaseController {
      * 分页加载视频
      */
     @RequestMapping("/loadVideo")
-    public ResponseVO loadVideo(String pCategoryId, String categoryId, @NotEmpty String pageNo) {
+    public ResponseVO loadVideo(String pCategoryId, String categoryId, @NotEmpty String pageNo, String orderBy) {
         Integer pCat = (pCategoryId != null && !pCategoryId.isEmpty()) ? Integer.valueOf(pCategoryId) : null;
         Integer cat = (categoryId != null && !categoryId.isEmpty()) ? Integer.valueOf(categoryId) : null;
-        PaginationResultVO<VideoInfo> result = videoInfoService.loadVideo(pCat, cat, Integer.valueOf(pageNo));
+        PaginationResultVO<VideoInfo> result = videoInfoService.loadVideo(pCat, cat, Integer.valueOf(pageNo), orderBy);
         return getSuccessResponseVO(result);
     }
 

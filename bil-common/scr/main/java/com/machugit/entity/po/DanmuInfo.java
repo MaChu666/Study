@@ -52,9 +52,34 @@ public class DanmuInfo implements Serializable {
     private String color;
 
     /**
+     * font size
+     */
+    private Integer fontSize;
+
+    /**
+     * is prior (border)
+     */
+    private Integer isPrior;
+
+    /**
+     * danmu type (0 normal, 1 timestamp jump)
+     */
+    private Integer danmuType;
+
+    /**
+     * report count
+     */
+    private Integer reportCount;
+
+    /**
      * 弹幕时间点
      */
     private Long time;
+
+    /**
+     * 空降目标时间（毫秒），0 表示非空降弹幕
+     */
+    private Long jumpTime;
 
     /**
      * 发布时间
@@ -105,6 +130,7 @@ public class DanmuInfo implements Serializable {
     }
 
     public void setMode(Integer mode){
+
         this.mode = mode;
     }
 
@@ -119,9 +145,48 @@ public class DanmuInfo implements Serializable {
     public String getColor(){
         return this.color;
     }
+    public void setFontSize(Integer fontSize){
+        this.fontSize = fontSize;
+    }
+
+    public Integer getFontSize(){
+        return this.fontSize;
+    }
+
+    public void setIsPrior(Integer isPrior){
+        this.isPrior = isPrior;
+    }
+
+    public Integer getIsPrior(){
+        return this.isPrior;
+    }
+
+    public void setDanmuType(Integer danmuType){
+        this.danmuType = danmuType;
+    }
+
+    public Integer getDanmuType(){
+        return this.danmuType;
+    }
+
+    public void setReportCount(Integer reportCount){
+        this.reportCount = reportCount;
+    }
+
+    public Integer getReportCount(){
+        return this.reportCount;
+    }
 
     public void setTime(Long time){
         this.time = time;
+    }
+
+    public void setJumpTime(Long jumpTime){
+        this.jumpTime = jumpTime;
+    }
+
+    public Long getJumpTime(){
+        return this.jumpTime;
     }
 
     public Long getTime(){

@@ -18,6 +18,7 @@ public class AppInterceptor implements HandlerInterceptor {
 
     private static final String[] PUBLIC_PATHS = {
         "/danmu/loadDanmu",
+        "/dynamic/loadDynamics",
     };
 
     @Resource

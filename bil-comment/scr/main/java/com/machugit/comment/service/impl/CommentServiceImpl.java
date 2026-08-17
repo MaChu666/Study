@@ -1,7 +1,7 @@
 package com.machugit.comment.service.impl;
 
 import com.machugit.comment.service.CommentService;
-import com.machugit.entity.po.CommentInfo;
+import com.machugit.entity.vo.CommentVO;
 import com.machugit.entity.vo.PaginationResultVO;
 import com.machugit.service.CommentInfoService;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public PaginationResultVO loadComment(String videoId, Integer pageNo, Integer pageSize) {
-        java.util.List<CommentInfo> list = commentInfoService.loadComment(videoId, pageNo, 0);
+        java.util.List<CommentVO> list = commentInfoService.loadComment(videoId, pageNo, 0);
         PaginationResultVO result = new PaginationResultVO();
         result.setList(list);
         return result;
