@@ -32,9 +32,9 @@ target/
 # IDE
 *.iml
 
-# 个人文件（不提交）
-个人简历*.docx
-微信图片*.jpg
+# 个人文件
+*.docx
+*.jpg
 
 # 前端运行日志
 *.err
