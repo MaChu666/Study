@@ -2,9 +2,6 @@ package com.machugit.interaction.controller;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.machugit.entity.dto.TokenUserInfoDto;
 import com.machugit.entity.po.DanmuInfo;
 import com.machugit.entity.vo.ResponseVO;
@@ -22,8 +19,6 @@ import javax.validation.constraints.NotEmpty;
 @Validated
 public class DanmuController extends com.machugit.controller.ABaseController {
 
-    private static final Logger logger = LoggerFactory.getLogger(DanmuController.class);
-
     @Resource
     private DanmuInfoServiceImpl danmuInfoService;
 
@@ -31,7 +26,7 @@ public class DanmuController extends com.machugit.controller.ABaseController {
      * 发布弹幕
      */
     @RequestMapping("/postDanmu")
-    public ResponseVO postDanmu(@NotEmpty String videoId, String fileId, @NotEmpty String text,
+    public ResponseVO<Void> postDanmu(@NotEmpty String videoId, String fileId, @NotEmpty String text,
                                 @NotEmpty String mode, @NotEmpty String color, @NotEmpty String time,
                                 String fontSize, String isPrior, String danmuType, String jumpTime) {
         TokenUserInfoDto tokenUserInfoDto = getTokenUserInfoDto();
@@ -51,7 +46,7 @@ public class DanmuController extends com.machugit.controller.ABaseController {
      * 加载弹幕
      */
     @RequestMapping("/loadDanmu")
-    public ResponseVO loadDanmu(String fileId, @NotEmpty String videoId) {
+    public ResponseVO<List<DanmuInfo>> loadDanmu(String fileId, @NotEmpty String videoId) {
         List<DanmuInfo> list = danmuInfoService.loadDanmu(fileId, videoId);
         return getSuccessResponseVO(list);
     }
